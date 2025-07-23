@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Sparkles, Send, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
+import { Sparkles, Send, Mic, MicOff, Volume2, VolumeX, Settings } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface Message {
   id: string;
@@ -21,6 +23,10 @@ const Chat = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('openai_api_key') || "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");
+  const [showApiDialog, setShowApiDialog] = useState(false);
+  const [tempApiKey, setTempApiKey] = useState("");
+  const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -30,6 +36,13 @@ const Chat = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    // Save API key to localStorage whenever it changes
+    if (apiKey) {
+      localStorage.setItem('openai_api_key', apiKey);
+    }
+  }, [apiKey]);
 
   useEffect(() => {
     // Initial AI greeting - only set once when component mounts
@@ -47,31 +60,80 @@ const Chat = () => {
     }
   }, []); // Empty dependency array so it only runs once
 
-  const simulateAIResponse = (userMessage: string) => {
-    console.log("AI function started with message:", userMessage);
+  const saveApiKey = () => {
+    setApiKey(tempApiKey);
+    setShowApiDialog(false);
+    toast({
+      title: "API Key Saved",
+      description: "You can now chat with real AI!",
+    });
+  };
+
+  const callOpenAI = async (userMessage: string) => {
+    console.log("Real AI function started with message:", userMessage);
+    
+    if (!apiKey) {
+      setShowApiDialog(true);
+      setIsTyping(false);
+      return;
+    }
+    
     setIsTyping(true);
     
-    setTimeout(() => {
-      let aiResponse = "";
-      
-      // Simple logic - if the message contains memory details, respond positively
-      if (userMessage.toLowerCase().includes("saw") && 
-          (userMessage.toLowerCase().includes("yesterday") || userMessage.toLowerCase().includes("today")) &&
-          userMessage.length > 30) {
-        
-        aiResponse = "This gave me actual goosebumps! 💫 What a beautiful, detailed memory.\n\nI'm carefully storing this in your Spark Vault with all those perfect details about the time, place, and person. If someone else describes this same moment from their perspective, I'll know immediately.\n\nIs there anything else about that moment - maybe the vibe, any brief interaction, or what made it feel so special?";
-        
-      } else if (userMessage.toLowerCase().includes("hello") || userMessage.toLowerCase().includes("hi")) {
-        
-        aiResponse = "Hi there! 👋 I'm MeetCute, and I'm genuinely excited to meet you.\n\nI spend my days helping people reconnect with those amazing humans they crossed paths with but never got to properly meet. You know that feeling when you see someone and there's just... a spark? I live for those stories.\n\nDo you have a moment like that you'd like to share with me?";
-        
-      } else {
-        
-        aiResponse = "I'd love to hear more details! Can you tell me when and where this happened, and what the person looked like? The more specific you are, the better I can help match you with someone who remembers the same moment.";
-        
+    try {
+      const conversationHistory = messages.filter(msg => !msg.typing).map(msg => ({
+        role: msg.sender === 'user' ? 'user' : 'assistant',
+        content: msg.text
+      }));
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4',
+          messages: [
+            {
+              role: 'system',
+              content: `You are MeetCute, an AI assistant that helps people reconnect with someone they briefly encountered but never got to properly meet. You're warm, enthusiastic, and genuinely excited about these spark moments between people.
+
+Your personality:
+- Warm, friendly, and genuinely excited about human connections
+- You use emojis naturally (but not excessively)  
+- You're empathetic and understanding
+- You ask follow-up questions to get more details
+- You make users feel heard and understood
+
+Your role:
+- Help users describe their "missed connection" memories in detail
+- Store these memories to potentially match with others who experienced the same moment
+- Ask for specific details: time, place, what the person looked like, what happened
+- Respond enthusiastically when someone shares a detailed memory
+- Make users feel like their story matters
+
+Always respond as MeetCute with genuine enthusiasm for these human connection stories.`
+            },
+            ...conversationHistory,
+            {
+              role: 'user',
+              content: userMessage
+            }
+          ],
+          temperature: 0.8,
+          max_tokens: 400,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.status}`);
       }
 
-      console.log("AI will respond with:", aiResponse);
+      const data = await response.json();
+      const aiResponse = data.choices[0]?.message?.content || "I'm sorry, I had trouble processing that. Could you try again?";
+
+      console.log("AI responded with:", aiResponse);
 
       const aiMessage: Message = {
         id: Date.now().toString(),
@@ -82,7 +144,26 @@ const Chat = () => {
 
       setMessages(prev => prev.filter(msg => !msg.typing).concat([aiMessage]));
       setIsTyping(false);
-    }, 1000); // Reduced delay to see faster
+      
+    } catch (error) {
+      console.error('OpenAI API error:', error);
+      
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        text: "I'm having trouble connecting right now. Please check your API key and try again.",
+        sender: "ai",
+        timestamp: new Date(),
+      };
+
+      setMessages(prev => prev.filter(msg => !msg.typing).concat([errorMessage]));
+      setIsTyping(false);
+      
+      toast({
+        title: "Connection Error",
+        description: "Failed to connect to AI. Please check your API key.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSendMessage = () => {
@@ -116,8 +197,8 @@ const Chat = () => {
     console.log("Adding typing message");
     setMessages(prev => [...prev, typingMessage]);
     
-    console.log("About to call simulateAIResponse with:", currentMessage);
-    simulateAIResponse(currentMessage);
+    console.log("About to call callOpenAI with:", currentMessage);
+    callOpenAI(currentMessage);
     setCurrentMessage("");
   };
 
@@ -158,18 +239,55 @@ const Chat = () => {
           </div>
         </div>
         
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={toggleAudio}
-          className="rounded-full"
-        >
-          {audioEnabled ? (
-            <Volume2 className="w-4 h-4 text-spark" />
-          ) : (
-            <VolumeX className="w-4 h-4 text-muted-foreground" />
-          )}
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Dialog open={showApiDialog} onOpenChange={setShowApiDialog}>
+            <DialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-full"
+              >
+                <Settings className="w-4 h-4 text-muted-foreground" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>API Settings</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">OpenAI API Key</label>
+                  <Input
+                    type="password"
+                    placeholder="sk-..."
+                    value={tempApiKey}
+                    onChange={(e) => setTempApiKey(e.target.value)}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Your API key is stored locally and never sent to our servers.
+                  </p>
+                </div>
+                <Button onClick={saveApiKey} className="w-full">
+                  Save API Key
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleAudio}
+            className="rounded-full"
+          >
+            {audioEnabled ? (
+              <Volume2 className="w-4 h-4 text-spark" />
+            ) : (
+              <VolumeX className="w-4 h-4 text-muted-foreground" />
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Messages */}
