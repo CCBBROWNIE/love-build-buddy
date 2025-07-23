@@ -160,31 +160,19 @@ const Landing = () => {
           </div>
 
           <div className="space-y-2">
-            <Label>Birthday</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !formData.birthday && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.birthday ? format(formData.birthday, "PPP") : "Pick your birthday"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={formData.birthday}
-                  onSelect={(date) => setFormData(prev => ({ ...prev, birthday: date }))}
-                  disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                  initialFocus
-                  className="p-3 pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
+            <Label htmlFor="birthday">Birthday</Label>
+            <Input
+              id="birthday"
+              type="date"
+              value={formData.birthday ? format(formData.birthday, "yyyy-MM-dd") : ""}
+              onChange={(e) => {
+                const date = e.target.value ? new Date(e.target.value) : undefined;
+                setFormData(prev => ({ ...prev, birthday: date }));
+              }}
+              max={format(new Date(), "yyyy-MM-dd")}
+              min="1940-01-01"
+              className="w-full"
+            />
           </div>
 
           <div className="space-y-2">
