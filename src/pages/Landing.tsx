@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Sparkles, Heart, Camera, Lock } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import heroImage from "@/assets/hero-meetcute-cinema.jpg";
+import barScene from "@/assets/scene-bar.jpg";
+import groceryScene from "@/assets/scene-grocery.jpg";
+import campusScene from "@/assets/scene-campus.jpg";
+import concertScene from "@/assets/scene-concert.jpg";
+import gymScene from "@/assets/scene-gym.jpg";
 import CameraModal from "@/components/CameraModal";
 import EmailVerification from "@/components/EmailVerification";
 
@@ -17,6 +21,24 @@ const Landing = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<"landing" | "signup" | "email-verification" | "identity-verification">("landing");
   const [showCamera, setShowCamera] = useState(false);
+  const [currentSceneIndex, setCurrentSceneIndex] = useState(0);
+  
+  const scenes = [
+    { image: barScene, title: "At the bar" },
+    { image: groceryScene, title: "Grocery shopping" },
+    { image: campusScene, title: "On campus" },
+    { image: concertScene, title: "At concerts" },
+    { image: gymScene, title: "At the gym" }
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSceneIndex((prev) => (prev + 1) % scenes.length);
+    }, 6000); // 6 second intervals
+
+    return () => clearInterval(interval);
+  }, [scenes.length]);
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -55,80 +77,87 @@ const Landing = () => {
 
   if (step === "landing") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-muted to-border/30">
-        {/* Hero Section */}
-        <div className="relative overflow-hidden">`
-          <div className="absolute inset-0 bg-gradient-to-br from-spark/20 to-coral/20" />
-          <img 
-            src={heroImage} 
-            alt="MeetCute Hero" 
-            className="absolute inset-0 w-full h-full object-cover opacity-30"
-          />
-          
-          <div className="relative z-10 container mx-auto px-4 py-20 text-center">
-            <div className="max-w-4xl mx-auto animate-fade-in">
-              {/* Logo */}
-              <div className="flex items-center justify-center mb-8">
-                <Sparkles className="w-8 h-8 text-spark mr-3 animate-spark-pulse" />
-                <h1 className="text-5xl font-bold">
-                  <span className="text-midnight">Meet</span>
-                  <span className="text-spark">Cute</span>
-                </h1>
-              </div>
+      <div className="min-h-screen bg-black relative overflow-hidden">
+        {/* Cycling Background Images */}
+        <div className="absolute inset-0">
+          {scenes.map((scene, index) => (
+            <div
+              key={index}
+              className={`absolute inset-0 transition-opacity duration-1000 ${
+                index === currentSceneIndex ? 'opacity-70' : 'opacity-0'
+              }`}
+            >
+              <img 
+                src={scene.image} 
+                alt={scene.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/40" />
+            </div>
+          ))}
+        </div>
+        
+        <div className="relative z-10 container mx-auto px-4 py-20 text-center">
+          <div className="max-w-4xl mx-auto animate-fade-in">
+            {/* Logo */}
+            <div className="flex items-center justify-center mb-8">
+              <Sparkles className="w-8 h-8 text-white mr-3 animate-pulse" />
+              <h1 className="text-6xl font-bold text-white drop-shadow-2xl">
+                <span>Meet</span>
+                <span className="text-yellow-400">Cute</span>
+              </h1>
+            </div>
 
-              {/* Tagline */}
-              <p className="text-2xl text-foreground/80 mb-6 font-light">
-                created with real-life friction, not online pressure
-              </p>
-              
-              <p className="text-lg text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
-                Turn those memorable missed connections into real connections. 
-                Describe a moment, and if they remember it too, we'll spark the conversation.
-              </p>
+            {/* Tagline */}
+            <p className="text-2xl text-white mb-6 font-light drop-shadow-lg">
+              Real connections happen everywhere
+            </p>
+            
+            <p className="text-lg text-gray-200 mb-12 max-w-2xl mx-auto leading-relaxed drop-shadow-md">
+              Share your moments. When someone else remembers it too, we'll connect you.
+            </p>
 
-              {/* CTA */}
-              <Button 
-                variant="spark" 
-                size="lg" 
-                onClick={handleGetStarted}
-                className="text-lg px-8 py-6 mb-16 animate-gentle-bounce"
-              >
-                <Heart className="mr-2" />
-                Start Your Story
-              </Button>
+            {/* CTA */}
+            <Button 
+              className="bg-yellow-400 hover:bg-yellow-500 text-black text-lg px-8 py-6 mb-16 font-semibold rounded-full shadow-2xl transition-all duration-300 hover:scale-105"
+              size="lg" 
+              onClick={handleGetStarted}
+            >
+              <Heart className="mr-2" />
+              Start Connecting
+            </Button>
 
-              {/* Features */}
-              <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-                <Card className="bg-card/80 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300">
-                  <CardContent className="pt-6 text-center">
-                    <Sparkles className="w-12 h-12 text-spark mx-auto mb-4" />
-                    <h3 className="font-semibold text-lg mb-2">AI Memory Matching</h3>
-                    <p className="text-muted-foreground">
-                      AI compares your messages to create IRL connections.
-                    </p>
-                  </CardContent>
-                </Card>
+            {/* Features */}
+            <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300">
+                <CardContent className="pt-6 text-center">
+                  <Sparkles className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
+                  <h3 className="font-semibold text-lg mb-2 text-white">AI Memory Matching</h3>
+                  <p className="text-gray-200">
+                    AI compares your messages to create IRL connections.
+                  </p>
+                </CardContent>
+              </Card>
 
-                <Card className="bg-card/80 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300">
-                  <CardContent className="pt-6 text-center">
-                    <Heart className="w-12 h-12 text-coral mx-auto mb-4" />
-                    <h3 className="font-semibold text-lg mb-2">Real Connections</h3>
-                    <p className="text-muted-foreground">
-                      Based on genuine moments, not superficial swipes
-                    </p>
-                  </CardContent>
-                </Card>
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300">
+                <CardContent className="pt-6 text-center">
+                  <Heart className="w-12 h-12 text-red-400 mx-auto mb-4" />
+                  <h3 className="font-semibold text-lg mb-2 text-white">Real Connections</h3>
+                  <p className="text-gray-200">
+                    Based on genuine moments, not superficial swipes
+                  </p>
+                </CardContent>
+              </Card>
 
-                <Card className="bg-card/80 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300">
-                  <CardContent className="pt-6 text-center">
-                    <Lock className="w-12 h-12 text-midnight mx-auto mb-4" />
-                    <h3 className="font-semibold text-lg mb-2">Privacy First</h3>
-                    <p className="text-muted-foreground">
-                      Your messages stay private until there's a mutual match
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
+              <Card className="bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/20 transition-all duration-300">
+                <CardContent className="pt-6 text-center">
+                  <Lock className="w-12 h-12 text-blue-400 mx-auto mb-4" />
+                  <h3 className="font-semibold text-lg mb-2 text-white">Privacy First</h3>
+                  <p className="text-gray-200">
+                    Your messages stay private until there's a mutual match
+                  </p>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
