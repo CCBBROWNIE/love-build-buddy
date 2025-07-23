@@ -32,18 +32,20 @@ const Chat = () => {
   }, [messages]);
 
   useEffect(() => {
-    // Initial AI greeting
-    const greeting: Message = {
-      id: "1",
-      text: "Hi there! 👋 I'm MeetCute, your AI assistant.\n\nI'm here to help you find someone you met—or almost met—in real life.\n\nJust describe the memory, and I'll hold onto it until someone describes the same moment.\n\nReady to tell your story?",
-      sender: "ai",
-      timestamp: new Date(),
-    };
+    // Initial AI greeting - only set once when component mounts
+    if (messages.length === 0) {
+      const greeting: Message = {
+        id: "1",
+        text: "Hi there! 👋 I'm MeetCute, and I'm genuinely excited to meet you.\n\nI spend my days helping people reconnect with those amazing humans they crossed paths with but never got to properly meet. You know that feeling when you see someone and there's just... a spark? I live for those stories.\n\nDo you have a moment like that you'd like to share with me?",
+        sender: "ai",
+        timestamp: new Date(),
+      };
 
-    setTimeout(() => {
-      setMessages([greeting]);
-    }, 500);
-  }, []);
+      setTimeout(() => {
+        setMessages([greeting]);
+      }, 500);
+    }
+  }, []); // Empty dependency array so it only runs once
 
   const simulateAIResponse = (userMessage: string) => {
     setIsTyping(true);
