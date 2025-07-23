@@ -86,12 +86,14 @@ const Chat = () => {
         content: msg.text
       }));
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      // Using a CORS proxy to bypass browser restrictions
+      const response = await fetch('https://cors-anywhere.herokuapp.com/https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
           'x-api-key': apiKey,
           'Content-Type': 'application/json',
-          'anthropic-version': '2023-06-01'
+          'anthropic-version': '2023-06-01',
+          'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify({
           model: 'claude-3-sonnet-20240229',
