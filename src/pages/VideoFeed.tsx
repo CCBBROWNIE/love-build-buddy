@@ -32,16 +32,16 @@ interface VideoPost {
 const mockVideos: VideoPost[] = [
   {
     id: "1",
-    username: "@sarah_love",
-    title: "How I met my soulmate at a coffee shop ☕️",
-    description: "Plot twist: I spilled coffee on him and he asked me out anyway! Sometimes the best connections happen in the most unexpected moments 💕 #meetcute #loverstory",
+    username: "@dikay_fitness",
+    title: "Gym pickup lines that actually work 💪",
+    description: "POV: You want to talk to someone at the gym but don't know how. Skip the 'do you come here often' and try these instead! 😂 #gymlife #datingtips #fitness #workout",
     videoUrl: "",
     thumbnailUrl: "",
-    likes: 12400,
-    comments: 892,
-    shares: 234,
+    likes: 24700,
+    comments: 1892,
+    shares: 567,
     isLiked: false,
-    category: "love-story"
+    category: "dating-advice"
   },
   {
     id: "2", 
