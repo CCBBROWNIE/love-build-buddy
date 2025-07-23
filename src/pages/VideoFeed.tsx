@@ -61,10 +61,10 @@ const mockVideos: VideoPost[] = [
   },
   {
     id: "3",
-    username: "@your_content",
-    title: "Your third video ✨",
-    description: "This is your actual third video that should now play properly! #yourvideo #working #content",
-    videoUrl: userVideo3,
+    username: "@third_video",
+    title: "Third video content",
+    description: "This will work using a duplicate of the first video until we solve the format issue",
+    videoUrl: userVideo1, // Using working video temporarily
     thumbnailUrl: "",
     likes: 2850,
     comments: 156,
