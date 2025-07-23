@@ -23,7 +23,7 @@ const Chat = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('openai_api_key') || "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");
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('claude_api_key') || "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");
   const [showApiDialog, setShowApiDialog] = useState(false);
   const [tempApiKey, setTempApiKey] = useState("");
   const { toast } = useToast();
@@ -40,7 +40,7 @@ const Chat = () => {
   useEffect(() => {
     // Save API key to localStorage whenever it changes
     if (apiKey) {
-      localStorage.setItem('openai_api_key', apiKey);
+      localStorage.setItem('claude_api_key', apiKey);
     }
   }, [apiKey]);
 
@@ -69,7 +69,7 @@ const Chat = () => {
     });
   };
 
-  const callOpenAI = async (userMessage: string) => {
+  const callClaude = async (userMessage: string) => {
     console.log("Real AI function started with message:", userMessage);
     
     if (!apiKey) {
@@ -86,18 +86,17 @@ const Chat = () => {
         content: msg.text
       }));
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          'x-api-key': apiKey,
           'Content-Type': 'application/json',
+          'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          model: 'gpt-4',
-          messages: [
-            {
-              role: 'system',
-              content: `You are MeetCute, an AI assistant that helps people reconnect with someone they briefly encountered but never got to properly meet. You're warm, enthusiastic, and genuinely excited about these spark moments between people.
+          model: 'claude-3-sonnet-20240229',
+          max_tokens: 400,
+          system: `You are MeetCute, an AI assistant that helps people reconnect with someone they briefly encountered but never got to properly meet. You're warm, enthusiastic, and genuinely excited about these spark moments between people.
 
 Your personality:
 - Warm, friendly, and genuinely excited about human connections
@@ -113,25 +112,23 @@ Your role:
 - Respond enthusiastically when someone shares a detailed memory
 - Make users feel like their story matters
 
-Always respond as MeetCute with genuine enthusiasm for these human connection stories.`
-            },
+Always respond as MeetCute with genuine enthusiasm for these human connection stories.`,
+          messages: [
             ...conversationHistory,
             {
               role: 'user',
               content: userMessage
             }
-          ],
-          temperature: 0.8,
-          max_tokens: 400,
+          ]
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`);
+        throw new Error(`Claude API error: ${response.status}`);
       }
 
       const data = await response.json();
-      const aiResponse = data.choices[0]?.message?.content || "I'm sorry, I had trouble processing that. Could you try again?";
+      const aiResponse = data.content[0]?.text || "I'm sorry, I had trouble processing that. Could you try again?";
 
       console.log("AI responded with:", aiResponse);
 
@@ -146,7 +143,7 @@ Always respond as MeetCute with genuine enthusiasm for these human connection st
       setIsTyping(false);
       
     } catch (error) {
-      console.error('OpenAI API error:', error);
+      console.error('Claude API error:', error);
       
       const errorMessage: Message = {
         id: Date.now().toString(),
@@ -197,8 +194,8 @@ Always respond as MeetCute with genuine enthusiasm for these human connection st
     console.log("Adding typing message");
     setMessages(prev => [...prev, typingMessage]);
     
-    console.log("About to call callOpenAI with:", currentMessage);
-    callOpenAI(currentMessage);
+    console.log("About to call callClaude with:", currentMessage);
+    callClaude(currentMessage);
     setCurrentMessage("");
   };
 
@@ -256,7 +253,7 @@ Always respond as MeetCute with genuine enthusiasm for these human connection st
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium">OpenAI API Key</label>
+                  <label className="text-sm font-medium">Claude API Key</label>
                   <Input
                     type="password"
                     placeholder="sk-..."
