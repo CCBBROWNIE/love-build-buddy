@@ -101,7 +101,7 @@ const Landing = () => {
           <div className="max-w-4xl mx-auto animate-fade-in">
             {/* Logo */}
             <div className="flex items-center justify-center mb-8">
-              <Sparkles className="w-8 h-8 text-white mr-3 animate-pulse" />
+              <Sparkles className="w-8 h-8 text-yellow-400 mr-3 animate-pulse" />
               <h1 className="text-6xl font-bold text-white drop-shadow-2xl">
                 <span>Meet</span>
                 <span className="text-yellow-400">Cute</span>
