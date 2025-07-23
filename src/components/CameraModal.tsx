@@ -97,14 +97,17 @@ const CameraModal = ({ isOpen, onClose, onCapture }: CameraModalProps) => {
     ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
     ctx.restore();
     
+    // Stop camera immediately after capture
+    stopCamera();
+    
     canvas.toBlob((blob) => {
       if (blob) {
         const file = new File([blob], "selfie.jpg", { type: "image/jpeg" });
         onCapture(file);
-        handleClose();
+        onClose(); // Close modal after successful capture
       }
     }, "image/jpeg", 0.9);
-  }, [isStreaming, onCapture]);
+  }, [isStreaming, onCapture, stopCamera, onClose]);
 
   const handleClose = useCallback(() => {
     stopCamera();
