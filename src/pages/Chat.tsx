@@ -88,6 +88,9 @@ const Chat = () => {
   const handleSendMessage = () => {
     if (!currentMessage.trim()) return;
 
+    console.log("=== SENDING MESSAGE ===");
+    console.log("Current message:", currentMessage);
+
     const userMessage: Message = {
       id: Date.now().toString(),
       text: currentMessage,
@@ -95,7 +98,11 @@ const Chat = () => {
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    console.log("Adding user message:", userMessage);
+    setMessages(prev => {
+      console.log("Previous messages:", prev);
+      return [...prev, userMessage];
+    });
     
     // Add typing indicator
     const typingMessage: Message = {
@@ -106,8 +113,10 @@ const Chat = () => {
       typing: true,
     };
     
+    console.log("Adding typing message");
     setMessages(prev => [...prev, typingMessage]);
     
+    console.log("About to call simulateAIResponse with:", currentMessage);
     simulateAIResponse(currentMessage);
     setCurrentMessage("");
   };
