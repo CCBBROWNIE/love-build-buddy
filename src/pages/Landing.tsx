@@ -64,7 +64,7 @@ const Landing = () => {
 
               {/* Tagline */}
               <p className="text-2xl text-foreground/80 mb-6 font-light">
-                Find someone you almost met
+                created with real-life friction, not online pressure
               </p>
               
               <p className="text-lg text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
