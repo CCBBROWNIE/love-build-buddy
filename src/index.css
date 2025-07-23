@@ -9,8 +9,8 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* MeetCute Design System - Modern, Gender-Neutral */
-    --background: 0 0% 98%; /* Clean White */
-    --foreground: 0 0% 15%; /* Dark Gray */
+    --background: 0 0% 8%; /* Dark Background */
+    --foreground: 0 0% 95%; /* Light Text */
 
     --card: 0 0% 98%;
     --card-foreground: 0 0% 15%;
