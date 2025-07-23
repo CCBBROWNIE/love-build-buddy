@@ -6,7 +6,8 @@ import {
   User, 
   Home, 
   Settings,
-  Sparkles 
+  Sparkles,
+  Play
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
@@ -26,10 +27,10 @@ const Navigation = ({ className }: NavigationProps) => {
 
   const navItems = [
     {
-      path: "/",
-      icon: Home,
-      label: "Home",
-      gradient: "from-sage to-lavender"
+      path: "/feed",
+      icon: Play,
+      label: "Feed",
+      gradient: "from-purple-500 to-pink-500"
     },
     {
       path: "/chat",
