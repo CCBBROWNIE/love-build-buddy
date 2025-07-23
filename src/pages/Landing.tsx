@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Sparkles, Heart, Camera, Lock } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import heroImage from "@/assets/hero-meetcute-city.jpg";
+import heroImage from "@/assets/hero-meetcute-cinema.jpg";
 import CameraModal from "@/components/CameraModal";
 import EmailVerification from "@/components/EmailVerification";
 
