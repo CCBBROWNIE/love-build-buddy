@@ -15,7 +15,8 @@ const Landing = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<"landing" | "signup">("landing");
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     birthday: undefined as Date | undefined,
     email: "",
     selfiePhoto: null as File | null,
@@ -137,14 +138,25 @@ const Landing = () => {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              placeholder="Your first name"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">First Name</Label>
+              <Input
+                id="firstName"
+                placeholder="First name"
+                value={formData.firstName}
+                onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name</Label>
+              <Input
+                id="lastName"
+                placeholder="Last name"
+                value={formData.lastName}
+                onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -255,7 +267,7 @@ const Landing = () => {
             variant="spark" 
             className="w-full" 
             onClick={handleSignup}
-            disabled={!formData.name || !formData.birthday || !formData.email || !formData.selfiePhoto || !formData.profilePhoto}
+            disabled={!formData.firstName || !formData.lastName || !formData.birthday || !formData.email || !formData.selfiePhoto || !formData.profilePhoto}
           >
             Create Account
           </Button>
