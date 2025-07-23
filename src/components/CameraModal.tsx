@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState } from "react";
+import { useRef, useCallback, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Camera, X, RotateCcw } from "lucide-react";
@@ -14,39 +14,69 @@ const CameraModal = ({ isOpen, onClose, onCapture }: CameraModalProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => {
+        track.stop();
+      });
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setIsStreaming(false);
+    setError(null);
+  }, []);
 
   const startCamera = useCallback(async () => {
     try {
+      setError(null);
+      
+      // Stop any existing stream first
+      stopCamera();
+      
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { 
-          facingMode: "user", // Front-facing camera for selfies
+          facingMode: "user",
           width: { ideal: 640 },
           height: { ideal: 480 }
         },
         audio: false
       });
       
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+      if (videoRef.current && stream) {
         streamRef.current = stream;
-        setIsStreaming(true);
+        videoRef.current.srcObject = stream;
+        
+        // Wait for video to be ready
+        await new Promise<void>((resolve) => {
+          if (videoRef.current) {
+            videoRef.current.onloadedmetadata = () => {
+              if (videoRef.current) {
+                videoRef.current.play().then(() => {
+                  setIsStreaming(true);
+                  resolve();
+                }).catch((playError) => {
+                  console.error("Error playing video:", playError);
+                  setError("Failed to start camera preview");
+                  resolve();
+                });
+              }
+            };
+          }
+        });
       }
-    } catch (error) {
-      console.error("Error accessing camera:", error);
-      alert("Unable to access camera. Please ensure you've granted camera permissions.");
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      setError("Unable to access camera. Please check permissions.");
+      stopCamera();
     }
-  }, []);
-
-  const stopCamera = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-      setIsStreaming(false);
-    }
-  }, []);
+  }, [stopCamera]);
 
   const capturePhoto = useCallback(() => {
-    if (!videoRef.current || !canvasRef.current) return;
+    if (!videoRef.current || !canvasRef.current || !isStreaming) return;
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -54,27 +84,43 @@ const CameraModal = ({ isOpen, onClose, onCapture }: CameraModalProps) => {
 
     if (!ctx) return;
 
+    // Set canvas size to match video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     
-    // Flip the image horizontally for selfie effect
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Flip horizontally for selfie effect
+    ctx.save();
     ctx.scale(-1, 1);
     ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+    ctx.restore();
     
     canvas.toBlob((blob) => {
       if (blob) {
         const file = new File([blob], "selfie.jpg", { type: "image/jpeg" });
         onCapture(file);
-        stopCamera();
-        onClose();
+        handleClose();
       }
-    }, "image/jpeg", 0.8);
-  }, [onCapture, onClose, stopCamera]);
+    }, "image/jpeg", 0.9);
+  }, [isStreaming, onCapture]);
 
   const handleClose = useCallback(() => {
     stopCamera();
     onClose();
   }, [stopCamera, onClose]);
+
+  // Cleanup on unmount or when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      stopCamera();
+    }
+    
+    return () => {
+      stopCamera();
+    };
+  }, [isOpen, stopCamera]);
 
   if (!isOpen) return null;
 
@@ -94,14 +140,18 @@ const CameraModal = ({ isOpen, onClose, onCapture }: CameraModalProps) => {
 
           <div className="space-y-4">
             <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover transform scale-x-[-1]"
-                onLoadedMetadata={startCamera}
-              />
+              {error ? (
+                <div className="flex items-center justify-center h-full text-white text-sm text-center p-4">
+                  {error}
+                </div>
+              ) : (
+                <video
+                  ref={videoRef}
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover transform scale-x-[-1]"
+                />
+              )}
               <canvas ref={canvasRef} className="hidden" />
             </div>
 
@@ -111,15 +161,16 @@ const CameraModal = ({ isOpen, onClose, onCapture }: CameraModalProps) => {
                   variant="spark"
                   onClick={startCamera}
                   className="flex-1"
+                  disabled={!!error}
                 >
                   <Camera className="w-4 h-4 mr-2" />
-                  Start Camera
+                  {error ? "Camera Error" : "Start Camera"}
                 </Button>
               ) : (
                 <>
                   <Button
                     variant="outline"
-                    onClick={stopCamera}
+                    onClick={startCamera}
                     className="flex-1"
                   >
                     <RotateCcw className="w-4 h-4 mr-2" />
