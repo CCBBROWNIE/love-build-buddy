@@ -164,12 +164,16 @@ const Landing = () => {
             <Input
               id="birthday"
               type="date"
-              value={formData.birthday ? format(formData.birthday, "yyyy-MM-dd") : ""}
+              value={formData.birthday ? formData.birthday.toISOString().split('T')[0] : ""}
               onChange={(e) => {
-                const date = e.target.value ? new Date(e.target.value) : undefined;
-                setFormData(prev => ({ ...prev, birthday: date }));
+                if (e.target.value) {
+                  const date = new Date(e.target.value + 'T00:00:00');
+                  setFormData(prev => ({ ...prev, birthday: date }));
+                } else {
+                  setFormData(prev => ({ ...prev, birthday: undefined }));
+                }
               }}
-              max={format(new Date(), "yyyy-MM-dd")}
+              max={new Date().toISOString().split('T')[0]}
               min="1940-01-01"
               className="w-full"
             />
