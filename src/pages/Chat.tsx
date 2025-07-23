@@ -48,6 +48,8 @@ const Chat = () => {
   }, []); // Empty dependency array so it only runs once
 
   const simulateAIResponse = (userMessage: string) => {
+    console.log("=== AI FUNCTION CALLED ===");
+    console.log("User message received:", userMessage);
     setIsTyping(true);
     
     setTimeout(() => {
