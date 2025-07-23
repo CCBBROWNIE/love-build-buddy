@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Sparkles, Heart, Camera } from "lucide-react";
+import { CalendarIcon, Sparkles, Heart, Camera, Lock } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import heroImage from "@/assets/hero-meetcute.jpg";
@@ -70,9 +70,9 @@ const Landing = () => {
               {/* Logo */}
               <div className="flex items-center justify-center mb-8">
                 <Sparkles className="w-8 h-8 text-spark mr-3 animate-spark-pulse" />
-                <h1 className="text-5xl font-bold">
-                  <span className="text-midnight">Meet</span>
-                  <span className="text-spark">Cute</span>
+                <h1 className="text-5xl font-bold bg-gradient-to-r from-white via-white to-spark bg-clip-text text-transparent drop-shadow-lg">
+                  <span className="text-shadow-lg">Meet</span>
+                  <span className="text-shadow-lg">Cute</span>
                 </h1>
               </div>
 
@@ -104,7 +104,7 @@ const Landing = () => {
                     <Sparkles className="w-12 h-12 text-spark mx-auto mb-4" />
                     <h3 className="font-semibold text-lg mb-2">AI Memory Matching</h3>
                     <p className="text-muted-foreground">
-                      Our AI compares your stories to find perfect matches
+                      AI compares your messages to create IRL connections. Real Connections based on living in the moment not algorithms and artificial swipes.
                     </p>
                   </CardContent>
                 </Card>
@@ -121,10 +121,10 @@ const Landing = () => {
 
                 <Card className="bg-card/80 backdrop-blur-sm border-border/50 hover:shadow-lg transition-all duration-300">
                   <CardContent className="pt-6 text-center">
-                    <Camera className="w-12 h-12 text-midnight mx-auto mb-4" />
+                    <Lock className="w-12 h-12 text-midnight mx-auto mb-4" />
                     <h3 className="font-semibold text-lg mb-2">Privacy First</h3>
                     <p className="text-muted-foreground">
-                      Your stories stay private until there's a mutual match
+                      Your messages stay private until there's a mutual match
                     </p>
                   </CardContent>
                 </Card>
