@@ -1,0 +1,223 @@
+import { useState, useRef } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { Camera, Upload, Shield, Check } from 'lucide-react';
+
+interface VerificationSelfieProps {
+  onSelfieUploaded: (url: string) => void;
+  currentSelfieUrl?: string;
+  onVerificationComplete?: () => void;
+}
+
+export function VerificationSelfie({ onSelfieUploaded, currentSelfieUrl, onVerificationComplete }: VerificationSelfieProps) {
+  const [uploading, setUploading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(currentSelfieUrl || null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image under 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      // Create preview
+      const preview = URL.createObjectURL(file);
+      setPreviewUrl(preview);
+
+      // Upload to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/verification-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('verification-selfies')
+        .upload(fileName, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('verification-selfies')
+        .getPublicUrl(fileName);
+
+      // Update profile in database
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ verification_selfie_url: publicUrl })
+        .eq('user_id', user.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      onSelfieUploaded(publicUrl);
+      toast({
+        title: "Verification photo uploaded!",
+        description: "Your verification selfie has been uploaded successfully.",
+      });
+
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload verification photo. Please try again.",
+        variant: "destructive",
+      });
+      setPreviewUrl(currentSelfieUrl || null);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleVerifyIdentity = async () => {
+    if (!user) return;
+
+    setVerifying(true);
+
+    try {
+      // Get user's profile to check if both images exist
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('profile_photo_url, verification_selfie_url')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      if (!profile.profile_photo_url || !profile.verification_selfie_url) {
+        toast({
+          title: "Missing photos",
+          description: "Please upload both a profile photo and verification selfie first.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Simulate identity verification process
+      // In a real app, this would send both images to an AI service for comparison
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Update verification status
+      const { error: verificationError } = await supabase
+        .from('profiles')
+        .update({ is_verified: true })
+        .eq('user_id', user.id);
+
+      if (verificationError) throw verificationError;
+
+      toast({
+        title: "Identity verified!",
+        description: "Your identity has been successfully verified.",
+      });
+
+      onVerificationComplete?.();
+
+    } catch (error: any) {
+      console.error('Verification error:', error);
+      toast({
+        title: "Verification failed",
+        description: error.message || "Failed to verify identity. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  return (
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle className="text-center flex items-center justify-center gap-2">
+          <Shield className="w-5 h-5" />
+          Identity Verification
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex flex-col items-center space-y-4">
+          {/* Selfie Preview */}
+          <div className="relative w-32 h-32 rounded-full overflow-hidden bg-muted flex items-center justify-center border-2 border-border">
+            {previewUrl ? (
+              <img 
+                src={previewUrl} 
+                alt="Verification selfie" 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <Camera className="w-8 h-8 text-muted-foreground" />
+            )}
+            {currentSelfieUrl && (
+              <div className="absolute top-0 right-0 w-6 h-6 bg-success rounded-full flex items-center justify-center">
+                <Check className="w-4 h-4 text-success-foreground" />
+              </div>
+            )}
+          </div>
+
+          {/* Upload Button */}
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            variant="outline"
+            className="w-full"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            {uploading ? 'Uploading...' : currentSelfieUrl ? 'Retake Selfie' : 'Take Verification Selfie'}
+          </Button>
+
+          {/* Verify Button */}
+          {currentSelfieUrl && (
+            <Button
+              onClick={handleVerifyIdentity}
+              disabled={verifying}
+              className="w-full"
+            >
+              <Shield className="w-4 h-4 mr-2" />
+              {verifying ? 'Verifying...' : 'Verify Identity'}
+            </Button>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="user"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+
+          <div className="text-sm text-muted-foreground text-center space-y-2">
+            <p>Take a clear selfie for identity verification.</p>
+            <p className="text-xs">This helps ensure profile authenticity and safety.</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
