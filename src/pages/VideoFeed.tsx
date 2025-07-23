@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import userVideo1 from "@/assets/user-video-1.mp4";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { 
@@ -32,16 +33,16 @@ interface VideoPost {
 const mockVideos: VideoPost[] = [
   {
     id: "1",
-    username: "@dikay_fitness",
-    title: "Gym pickup lines that actually work 💪",
-    description: "POV: You want to talk to someone at the gym but don't know how. Skip the 'do you come here often' and try these instead! 😂 #gymlife #datingtips #fitness #workout",
-    videoUrl: "",
+    username: "@user_content",
+    title: "Real video content 🎥",
+    description: "User-generated content about relationships and dating. This is real video content uploaded to the feed! #realcontent #dating #relationships",
+    videoUrl: userVideo1,
     thumbnailUrl: "",
-    likes: 24700,
-    comments: 1892,
-    shares: 567,
+    likes: 1250,
+    comments: 89,
+    shares: 23,
     isLiked: false,
-    category: "dating-advice"
+    category: "love-story"
   },
   {
     id: "2", 
@@ -113,6 +114,30 @@ const VideoFeed = () => {
     
     if (newIndex !== currentVideoIndex && newIndex >= 0 && newIndex < videos.length) {
       setCurrentVideoIndex(newIndex);
+      
+      // Pause all videos except the current one
+      videoRefs.current.forEach((video, idx) => {
+        if (video) {
+          if (idx === newIndex) {
+            video.play();
+          } else {
+            video.pause();
+          }
+        }
+      });
+    }
+  };
+
+  const togglePlayPause = () => {
+    const currentVideo = videoRefs.current[currentVideoIndex];
+    if (currentVideo) {
+      if (currentVideo.paused) {
+        currentVideo.play();
+        setIsPlaying(true);
+      } else {
+        currentVideo.pause();
+        setIsPlaying(false);
+      }
     }
   };
 
@@ -153,14 +178,31 @@ const VideoFeed = () => {
             key={video.id}
             className="relative h-screen w-full snap-start flex items-center justify-center bg-gray-900"
           >
-            {/* Video Background Placeholder */}
-            <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-white/50 text-6xl font-bold">
-                  {index + 1}
+            {/* Video Background */}
+            {video.videoUrl ? (
+              <video
+                ref={el => videoRefs.current[index] = el}
+                className="absolute inset-0 w-full h-full object-cover"
+                src={video.videoUrl}
+                autoPlay={index === currentVideoIndex}
+                loop
+                muted={isMuted}
+                playsInline
+                onLoadedData={() => {
+                  if (index === currentVideoIndex && videoRefs.current[index]) {
+                    videoRefs.current[index]?.play();
+                  }
+                }}
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-white/50 text-6xl font-bold">
+                    {index + 1}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Video Overlay */}
             <div className="absolute inset-0 bg-black/20" />
@@ -255,6 +297,14 @@ const VideoFeed = () => {
 
             {/* Video Controls */}
             <div className="absolute top-4 right-4 flex space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={togglePlayPause}
+                className="bg-black/30 hover:bg-black/50 text-white p-2 rounded-full"
+              >
+                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"
