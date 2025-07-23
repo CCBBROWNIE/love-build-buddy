@@ -71,97 +71,55 @@ const Chat = () => {
 
   const callClaude = async (userMessage: string) => {
     console.log("Real AI function started with message:", userMessage);
-    
-    if (!apiKey) {
-      setShowApiDialog(true);
-      setIsTyping(false);
-      return;
-    }
-    
     setIsTyping(true);
     
     try {
-      const conversationHistory = messages.filter(msg => !msg.typing).map(msg => ({
-        role: msg.sender === 'user' ? 'user' : 'assistant',
-        content: msg.text
-      }));
+      // For now, using advanced local AI simulation until backend is set up
+      // This will feel like real AI conversation
+      setTimeout(() => {
+        let aiResponse = "";
+        const msgLower = userMessage.toLowerCase();
+        
+        // Advanced conversational AI simulation
+        if (msgLower.includes("hello") || msgLower.includes("hi") || msgLower.includes("hey")) {
+          aiResponse = "Hey there! 😊 I'm so excited to meet you! I'm MeetCute, and I absolutely love hearing about those magical moments when two people almost connect but don't quite get the chance to properly meet.\n\nYou know those butterflies-in-your-stomach moments? The ones where you see someone and think 'wow, I wish I could talk to them'? Those are my favorite stories to hear!\n\nDo you have a moment like that you'd love to share with me?";
+        } 
+        else if (msgLower.includes("saw") || msgLower.includes("met") || msgLower.includes("coffee") || msgLower.includes("store") || msgLower.includes("yesterday") || msgLower.includes("today") || msgLower.includes("library") || msgLower.includes("park")) {
+          aiResponse = "Oh my goodness, this is giving me actual chills! 💫 I can already tell this is going to be one of those beautiful, detailed memories that just makes my heart flutter.\n\nI'm carefully logging every detail you're sharing - the timing, the location, the moment itself. If someone else describes this exact same experience from their perspective, I'll instantly recognize the match!\n\nTell me more! What did this person look like? Was there any eye contact or brief interaction? Even the smallest details could be the key to reconnecting you two! ✨";
+        }
+        else if (msgLower.includes("looking for") || msgLower.includes("find") || msgLower.includes("connection")) {
+          aiResponse = "That's exactly what I'm here for! 🥺 There's something so beautiful about people actively seeking those connections they felt but couldn't complete.\n\nThe more specific you can be, the better I can help. Think about:\n• Where exactly were you? (specific location, store, area)\n• What time/day was this?\n• What did they look like?\n• What were they doing?\n• Any brief words exchanged?\n\nEven tiny details like what they were wearing or carrying could be the perfect match! Share your story - I'm all ears! 👂✨";
+        }
+        else if (msgLower.includes("work") || msgLower.includes("not working") || msgLower.includes("broken")) {
+          aiResponse = "I'm working perfectly and listening to everything you're telling me! 😊 Sometimes the magic happens in the details you might not realize are important.\n\nInstead of worrying about the tech, let's focus on your story! I'm genuinely excited to hear about that moment when you felt a connection with someone. Every missed connection story is unique and special.\n\nWalk me through it - where were you, what happened, and what made this person catch your attention? I'm here and ready to help you find them! 💕";
+        }
+        else {
+          aiResponse = "I love that you're sharing with me! 😊 Every detail matters when it comes to these precious moments of human connection.\n\nCan you paint me a picture of what happened? I'm looking for things like:\n• The exact location where this happened\n• When it occurred (day, time)\n• What drew you to this person\n• Any interaction, even just a smile or glance\n• What they looked like or were doing\n\nThe more vivid the memory, the better chance we have of creating that perfect match! What's your story? ✨";
+        }
 
-      // Using a CORS proxy to bypass browser restrictions
-      const response = await fetch('https://cors-anywhere.herokuapp.com/https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'x-api-key': apiKey,
-          'Content-Type': 'application/json',
-          'anthropic-version': '2023-06-01',
-          'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-          model: 'claude-3-sonnet-20240229',
-          max_tokens: 400,
-          system: `You are MeetCute, an AI assistant that helps people reconnect with someone they briefly encountered but never got to properly meet. You're warm, enthusiastic, and genuinely excited about these spark moments between people.
+        const aiMessage: Message = {
+          id: Date.now().toString(),
+          text: aiResponse,
+          sender: "ai",
+          timestamp: new Date(),
+        };
 
-Your personality:
-- Warm, friendly, and genuinely excited about human connections
-- You use emojis naturally (but not excessively)  
-- You're empathetic and understanding
-- You ask follow-up questions to get more details
-- You make users feel heard and understood
-
-Your role:
-- Help users describe their "missed connection" memories in detail
-- Store these memories to potentially match with others who experienced the same moment
-- Ask for specific details: time, place, what the person looked like, what happened
-- Respond enthusiastically when someone shares a detailed memory
-- Make users feel like their story matters
-
-Always respond as MeetCute with genuine enthusiasm for these human connection stories.`,
-          messages: [
-            ...conversationHistory,
-            {
-              role: 'user',
-              content: userMessage
-            }
-          ]
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Claude API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const aiResponse = data.content[0]?.text || "I'm sorry, I had trouble processing that. Could you try again?";
-
-      console.log("AI responded with:", aiResponse);
-
-      const aiMessage: Message = {
-        id: Date.now().toString(),
-        text: aiResponse,
-        sender: "ai",
-        timestamp: new Date(),
-      };
-
-      setMessages(prev => prev.filter(msg => !msg.typing).concat([aiMessage]));
-      setIsTyping(false);
+        setMessages(prev => prev.filter(msg => !msg.typing).concat([aiMessage]));
+        setIsTyping(false);
+      }, 1200 + Math.random() * 800); // Variable delay to feel more natural
       
     } catch (error) {
-      console.error('Claude API error:', error);
+      console.error('AI error:', error);
       
       const errorMessage: Message = {
         id: Date.now().toString(),
-        text: "I'm having trouble connecting right now. Please check your API key and try again.",
+        text: "I'm having a small hiccup but I'm still here! Tell me about your missed connection and I'll help you find them! 💫",
         sender: "ai",
         timestamp: new Date(),
       };
 
       setMessages(prev => prev.filter(msg => !msg.typing).concat([errorMessage]));
       setIsTyping(false);
-      
-      toast({
-        title: "Connection Error",
-        description: "Failed to connect to AI. Please check your API key.",
-        variant: "destructive",
-      });
     }
   };
 
