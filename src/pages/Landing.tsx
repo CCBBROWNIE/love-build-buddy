@@ -209,7 +209,7 @@ const Landing = () => {
                 id="selfie-upload"
               />
               <Button 
-                variant="outline" 
+                variant="spark" 
                 size="sm"
                 onClick={() => document.getElementById("selfie-upload")?.click()}
               >
@@ -239,7 +239,7 @@ const Landing = () => {
                 id="profile-upload"
               />
               <Button 
-                variant="outline" 
+                variant="spark" 
                 size="sm"
                 onClick={() => document.getElementById("profile-upload")?.click()}
               >
