@@ -134,7 +134,7 @@ const Chat = () => {
           </Avatar>
           <div>
             <h1 className="font-semibold">
-              <span className="text-midnight">Meet</span>
+              <span className="text-foreground">Meet</span>
               <span className="text-spark">Cute</span>
             </h1>
             <p className="text-sm text-muted-foreground">Your AI Memory Assistant</p>
@@ -166,7 +166,7 @@ const Chat = () => {
               {message.sender === "ai" && (
                 <div className="flex items-center space-x-2 mb-2">
                   <Sparkles className="w-4 h-4 text-spark" />
-                  <span className="text-sm font-medium text-midnight">MeetCute</span>
+                  <span className="text-sm font-medium text-foreground">MeetCute</span>
                 </div>
               )}
               
@@ -202,7 +202,7 @@ const Chat = () => {
             <div className="max-w-[80%]">
               <div className="flex items-center space-x-2 mb-2">
                 <Sparkles className="w-4 h-4 text-spark animate-spin" />
-                <span className="text-sm font-medium text-midnight">MeetCute is thinking...</span>
+                <span className="text-sm font-medium text-foreground">MeetCute is thinking...</span>
               </div>
             </div>
           </div>
