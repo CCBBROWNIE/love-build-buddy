@@ -8,15 +8,15 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* MeetCute Design System - Warm, Romantic, Gen Z */
-    --background: 45 100% 97%; /* Creamy Ivory #FFF8E7 */
-    --foreground: 0 0% 20%; /* Near-black #333333 */
+    /* MeetCute Design System - Modern, Gender-Neutral */
+    --background: 0 0% 98%; /* Clean White */
+    --foreground: 0 0% 15%; /* Dark Gray */
 
-    --card: 45 100% 97%;
-    --card-foreground: 0 0% 20%;
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 20%;
+    --popover-foreground: 0 0% 15%;
 
     /* Golden Spark - Primary Brand Color */
     --primary: 48 100% 71%; /* Golden Yellow #FFD369 */
@@ -24,27 +24,27 @@ All colors MUST be HSL.
 
     /* Midnight Charcoal - Bold Contrast */
     --secondary: 0 0% 10%; /* #1A1A1A */
-    --secondary-foreground: 45 100% 97%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 45 80% 94%;
+    --muted: 0 0% 96%;
     --muted-foreground: 0 0% 45%;
 
-    /* Rose Coral - Emotional Highlight */
+    /* Coral - Emotional Highlight (kept minimal) */
     --accent: 355 100% 77%; /* #FF8C94 */
     --accent-foreground: 0 0% 10%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 45 100% 97%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 45 60% 88%;
-    --input: 45 60% 88%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
     --ring: 48 100% 71%;
 
     /* Custom MeetCute Colors */
     --spark: 48 100% 71%; /* Golden Spark */
     --midnight: 0 0% 10%; /* Midnight Charcoal */
     --coral: 355 100% 77%; /* Rose Coral */
-    --cream: 45 100% 97%; /* Creamy Ivory */
+    --neutral: 0 0% 96%; /* Clean Neutral */
     
     /* Gradients */
     --gradient-spark: linear-gradient(135deg, hsl(var(--spark)), hsl(var(--coral)));

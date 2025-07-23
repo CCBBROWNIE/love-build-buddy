@@ -41,9 +41,9 @@ const Landing = () => {
 
   if (step === "landing") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-cream via-background to-muted">
+      <div className="min-h-screen bg-gradient-to-br from-background via-muted to-border/30">
         {/* Hero Section */}
-        <div className="relative overflow-hidden">
+        <div className="relative overflow-hidden">`
           <div className="absolute inset-0 bg-gradient-to-br from-spark/20 to-coral/20" />
           <img 
             src={heroImage} 
