@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import userVideo1 from "@/assets/user-video-1.mp4";
+import lovableVideo from "@/assets/lovable-video.mp4";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { 
@@ -46,16 +47,16 @@ const mockVideos: VideoPost[] = [
   },
   {
     id: "2", 
-    username: "@dating_coach_mike",
-    title: "3 Signs They're Actually Interested",
-    description: "Stop overthinking! Here are the real signs someone wants to get to know you better. Save this for your next date! 🔥 #datingtips #datingadvice",
-    videoUrl: "",
+    username: "@creative_content",
+    title: "Behind the scenes content ✨",
+    description: "Real user-generated content showcasing authentic moments and stories. Love the creative energy in this one! #authentic #creativity #reallife #content",
+    videoUrl: lovableVideo,
     thumbnailUrl: "",
-    likes: 8900,
-    comments: 543,
-    shares: 167,
-    isLiked: true,
-    category: "dating-advice"
+    likes: 2800,
+    comments: 156,
+    shares: 67,
+    isLiked: false,
+    category: "love-story"
   },
   {
     id: "3",
