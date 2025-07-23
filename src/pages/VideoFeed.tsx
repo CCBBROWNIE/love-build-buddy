@@ -71,19 +71,6 @@ const mockVideos: VideoPost[] = [
     shares: 73,
     isLiked: false,
     category: "love-story"
-  },
-  {
-    id: "4",
-    username: "@meetcute_official",
-    title: "Real connections start with real moments",
-    description: "Download MeetCute and turn your missed connections into real relationships. Available now! 💫 #MeetCute #RealConnections #sponsored",
-    videoUrl: "",
-    thumbnailUrl: "",
-    likes: 2300,
-    comments: 156,
-    shares: 89,
-    isLiked: false,
-    category: "ad"
   }
 ];
 
