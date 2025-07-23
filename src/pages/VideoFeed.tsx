@@ -181,6 +181,7 @@ const VideoFeed = () => {
                 loop
                 muted={isMuted}
                 playsInline
+                preload="metadata"
                 onLoadedData={() => {
                   if (index === currentVideoIndex && videoRefs.current[index]) {
                     videoRefs.current[index]?.play().catch(error => {
@@ -191,7 +192,18 @@ const VideoFeed = () => {
                 onError={(e) => {
                   console.error(`Video ${index} failed to load:`, e);
                 }}
-              />
+              >
+                {/* Fallback for unsupported video formats */}
+                <source src={video.videoUrl} type="video/mp4" />
+                <source src={video.videoUrl} type="video/webm" />
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                  <div className="text-white text-center">
+                    <div className="text-4xl mb-2">⚠️</div>
+                    <div className="text-lg">Video format not supported</div>
+                    <div className="text-sm text-white/70 mt-2">Try a different video file</div>
+                  </div>
+                </div>
+              </video>
             ) : (
               <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900">
                 <div className="absolute inset-0 flex items-center justify-center">
