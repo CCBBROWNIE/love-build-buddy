@@ -61,7 +61,7 @@ const mockVideos: VideoPost[] = [
   },
   {
     id: "3",
-    username: "@creative_content",
+    username: "@creative_content", 
     title: "Amazing moments captured ✨",
     description: "Real experiences and genuine connections in motion. This is what authentic content looks like! #authentic #realmoments #genuine #creative",
     videoUrl: userVideo3,
@@ -176,33 +176,29 @@ const VideoFeed = () => {
               <video
                 ref={el => videoRefs.current[index] = el}
                 className="absolute inset-0 w-full h-full object-cover"
-                src={video.videoUrl}
                 autoPlay={index === currentVideoIndex}
                 loop
                 muted={isMuted}
                 playsInline
-                preload="metadata"
-                onLoadedData={() => {
+                preload="auto"
+                controls={false}
+                onCanPlay={() => {
+                  console.log(`Video ${index} can play`);
                   if (index === currentVideoIndex && videoRefs.current[index]) {
                     videoRefs.current[index]?.play().catch(error => {
-                      console.error(`Error playing video ${index} on load:`, error);
+                      console.error(`Error playing video ${index}:`, error);
                     });
                   }
                 }}
                 onError={(e) => {
-                  console.error(`Video ${index} failed to load:`, e);
+                  console.error(`Video ${index} error:`, e.currentTarget.error);
                 }}
+                onLoadStart={() => console.log(`Video ${index} load started`)}
+                onLoadedMetadata={() => console.log(`Video ${index} metadata loaded`)}
+                onLoadedData={() => console.log(`Video ${index} data loaded`)}
               >
-                {/* Fallback for unsupported video formats */}
                 <source src={video.videoUrl} type="video/mp4" />
-                <source src={video.videoUrl} type="video/webm" />
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-                  <div className="text-white text-center">
-                    <div className="text-4xl mb-2">⚠️</div>
-                    <div className="text-lg">Video format not supported</div>
-                    <div className="text-sm text-white/70 mt-2">Try a different video file</div>
-                  </div>
-                </div>
+                Your browser does not support the video tag.
               </video>
             ) : (
               <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900">
