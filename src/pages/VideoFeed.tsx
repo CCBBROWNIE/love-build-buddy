@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import userVideo1 from "@/assets/user-video-1.mp4";
 import userVideo2 from "@/assets/user-video-2.mp4";
-import userVideo3 from "@/assets/user-video-3-new.mp4";
+import userVideo3 from "@/assets/user-video-3-final.mp4";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { 
