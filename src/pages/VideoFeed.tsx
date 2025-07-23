@@ -1,7 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import userVideo1 from "@/assets/user-video-1.mp4";
-import userVideo2 from "@/assets/user-video-2.mp4";
-import userVideo3 from "@/assets/user-video-3-new.mp4";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { 
@@ -20,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { VideoUpload } from "@/components/VideoUpload";
+import { VideoComments } from "@/components/VideoComments";
 import { useToast } from "@/hooks/use-toast";
 import { 
   DropdownMenu,
@@ -42,35 +40,6 @@ interface VideoPost {
   category: "love-story" | "dating-advice" | "relationship-tips" | "ad";
 }
 
-// Mock video data - in real app this would come from API
-const mockVideos: VideoPost[] = [
-  {
-    id: "1",
-    username: "@user_content",
-    title: "Real video content 🎥",
-    description: "User-generated content about relationships and dating. This is real video content uploaded to the feed! #realcontent #dating #relationships",
-    videoUrl: userVideo1,
-    thumbnailUrl: "",
-    likes: 1250,
-    comments: 89,
-    shares: 23,
-    isLiked: false,
-    category: "love-story"
-  },
-  {
-    id: "2", 
-    username: "@authentic_stories",
-    title: "Real life moments ✨",
-    description: "Capturing authentic experiences and genuine connections. This is what real life looks like! #authentic #reallife #moments #genuine",
-    videoUrl: userVideo2,
-    thumbnailUrl: "",
-    likes: 3200,
-    comments: 198,
-    shares: 89,
-    isLiked: false,
-    category: "love-story"
-  }
-];
 
 const VideoFeed = () => {
   const { user } = useAuth();
@@ -79,6 +48,7 @@ const VideoFeed = () => {
   const [videos, setVideos] = useState<VideoPost[]>([]);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
+  const [commentsOpen, setCommentsOpen] = useState<string | null>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -93,30 +63,44 @@ const VideoFeed = () => {
 
       if (error) {
         console.error('Error fetching videos:', error);
-        // Fallback to mock videos
-        setVideos(mockVideos);
+        setVideos([]);
         return;
       }
 
-      const formattedVideos: VideoPost[] = videosData.map(video => ({
-        id: video.id,
-        username: `@user_${video.id.slice(0, 8)}`,
-        title: video.title,
-        description: video.description || '',
-        videoUrl: video.video_url,
-        thumbnailUrl: video.thumbnail_url || '',
-        likes: video.likes_count || 0,
-        comments: video.comments_count || 0,
-        shares: video.shares_count || 0,
-        isLiked: false, // We'll check this separately
-        category: video.category as VideoPost['category'] || 'love-story'
-      }));
+      // Get unique user IDs
+      const userIds = [...new Set(videosData.map(v => v.user_id))];
+      
+      // Fetch profiles for those users
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name')
+        .in('user_id', userIds);
 
-      // Mix user videos with mock videos for demo
-      setVideos([...formattedVideos, ...mockVideos]);
+      const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
+
+      const formattedVideos: VideoPost[] = videosData.map(video => {
+        const profile = profilesMap.get(video.user_id);
+        const username = profile ? `@${profile.first_name.toLowerCase()}` : '@user';
+        
+        return {
+          id: video.id,
+          username,
+          title: video.title,
+          description: video.description || '',
+          videoUrl: video.video_url,
+          thumbnailUrl: video.thumbnail_url || '',
+          likes: video.likes_count || 0,
+          comments: video.comments_count || 0,
+          shares: video.shares_count || 0,
+          isLiked: false, // We'll check this separately
+          category: video.category as VideoPost['category'] || 'love-story'
+        };
+      });
+
+      setVideos(formattedVideos);
     } catch (error) {
       console.error('Error in fetchVideos:', error);
-      setVideos(mockVideos);
+      setVideos([]);
     }
   };
 
@@ -326,21 +310,9 @@ const VideoFeed = () => {
                   muted={isMuted}
                   playsInline
                   preload="auto"
-                  onCanPlay={() => {
-                    console.log(`✅ Video ${index} CAN PLAY`);
-                  }}
-                  onError={(e) => {
-                    console.error(`❌ Video ${index} ERROR:`, e.currentTarget.error);
-                  }}
-                  onLoadStart={() => console.log(`📥 Video ${index} LOAD START`)}
-                  onLoadedData={() => console.log(`✅ Video ${index} DATA LOADED`)}
                 >
                   <source src={video.videoUrl} type="video/mp4" />
                 </video>
-                {/* Show video info for debugging */}
-                <div className="absolute top-4 left-4 bg-black/50 text-white p-2 rounded text-xs">
-                  Video {index}: {video.videoUrl.split('/').pop()}
-                </div>
               </div>
             ) : (
               <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900">
@@ -411,6 +383,7 @@ const VideoFeed = () => {
                   <Button
                     variant="ghost"
                     size="sm"
+                    onClick={() => setCommentsOpen(video.id)}
                     className="flex flex-col items-center p-2 hover:bg-white/10 rounded-full"
                   >
                     <MessageCircle className="w-7 h-7 text-white mb-1" />
@@ -443,7 +416,7 @@ const VideoFeed = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="bg-background border border-border">
-                      {user && video.id && !video.id.startsWith('mock') && (
+                      {user && video.id && (
                         <DropdownMenuItem
                           onClick={() => handleDeleteVideo(video.id)}
                           className="text-destructive flex items-center gap-2 cursor-pointer"
@@ -498,6 +471,15 @@ const VideoFeed = () => {
 
       {/* Video Upload Button */}
       <VideoUpload onVideoUploaded={fetchVideos} />
+
+      {/* Comments Modal */}
+      {commentsOpen && (
+        <VideoComments
+          videoId={commentsOpen}
+          isOpen={!!commentsOpen}
+          onClose={() => setCommentsOpen(null)}
+        />
+      )}
 
       {/* Custom CSS for hiding scrollbar */}
       <style>{`
