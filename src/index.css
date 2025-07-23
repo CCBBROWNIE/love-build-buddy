@@ -8,56 +8,67 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* MeetCute Design System - Modern, Gender-Neutral */
-    --background: 0 0% 8%; /* Dark Background */
-    --foreground: 0 0% 95%; /* Light Text */
+    /* MeetCute Design System - Enhanced Light Mode */
+    --background: 0 0% 99%; /* Ultra Clean White */
+    --foreground: 0 0% 5%; /* Deep Charcoal */
 
-    --card: 0 0% 98%;
-    --card-foreground: 0 0% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 8%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 15%;
+    --popover-foreground: 0 0% 8%;
 
     /* Golden Spark - Primary Brand Color */
     --primary: 48 100% 71%; /* Golden Yellow #FFD369 */
     --primary-foreground: 0 0% 10%; /* Midnight Charcoal */
 
-    /* Midnight Charcoal - Bold Contrast */
-    --secondary: 0 0% 10%; /* #1A1A1A */
-    --secondary-foreground: 0 0% 98%;
+    /* Soft Lavender - Secondary */
+    --secondary: 270 40% 95%; /* Soft Lavender #F4F1FF */
+    --secondary-foreground: 270 20% 20%;
 
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 45%;
 
-    /* Coral - Emotional Highlight (kept minimal) */
-    --accent: 355 100% 77%; /* #FF8C94 */
+    /* Coral - Emotional Highlight */
+    --accent: 355 85% 75%; /* Coral #FF8C94 */
     --accent-foreground: 0 0% 10%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 90%;
+    --border: 0 0% 92%;
     --input: 0 0% 100%; /* White input background */
     --ring: 48 100% 71%;
 
     /* Custom MeetCute Colors */
     --spark: 48 100% 71%; /* Golden Spark */
-    --midnight: 0 0% 10%; /* Midnight Charcoal */
-    --coral: 355 100% 77%; /* Rose Coral */
-    --neutral: 0 0% 96%; /* Clean Neutral */
+    --spark-glow: 48 100% 85%; /* Lighter spark for glows */
+    --midnight: 0 0% 10%; /* Deep Charcoal */
+    --coral: 355 85% 75%; /* Warm Coral */
+    --coral-light: 355 100% 90%; /* Light coral accent */
+    --lavender: 270 40% 95%; /* Soft Lavender */
+    --lavender-dark: 270 20% 20%; /* Dark lavender text */
+    --cream: 45 80% 98%; /* Warm cream */
+    --sage: 140 30% 85%; /* Soft sage green */
     
-    /* Gradients */
+    /* Enhanced Gradients */
     --gradient-spark: linear-gradient(135deg, hsl(var(--spark)), hsl(var(--coral)));
-    --gradient-soft: linear-gradient(180deg, hsl(var(--cream)), hsl(45 80% 94%));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--lavender)), hsl(var(--spark-glow)));
+    --gradient-subtle: linear-gradient(180deg, hsl(var(--cream)), hsl(var(--lavender)));
+    --gradient-warm: linear-gradient(45deg, hsl(var(--coral-light)), hsl(var(--spark-glow)));
     
-    /* Shadows */
-    --shadow-warm: 0 10px 30px -10px hsl(var(--spark) / 0.3);
-    --shadow-soft: 0 4px 20px -4px hsl(var(--midnight) / 0.1);
+    /* Sophisticated Shadows */
+    --shadow-elegant: 0 20px 50px -10px hsl(var(--midnight) / 0.1);
+    --shadow-warm: 0 10px 30px -10px hsl(var(--spark) / 0.2);
+    --shadow-soft: 0 4px 20px -4px hsl(var(--midnight) / 0.08);
+    --shadow-glow: 0 0 40px hsl(var(--spark) / 0.15);
     
-    /* Animations */
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Refined Animations */
+    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    --transition-gentle: all 0.2s ease-out;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
 
@@ -77,33 +88,51 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Dark mode with sophisticated MeetCute palette */
+    --background: 0 0% 6%; /* Rich black */
+    --foreground: 0 0% 95%; /* Soft white */
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 48 100% 71%; /* Keep golden spark */
+    --primary-foreground: 0 0% 10%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 270 20% 15%; /* Dark lavender */
+    --secondary-foreground: 270 40% 95%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 355 85% 75%; /* Keep coral */
+    --accent-foreground: 0 0% 10%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 50%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 0 0% 15%;
+    --input: 0 0% 10%;
+    --ring: 48 100% 71%;
+    
+    /* Dark mode custom colors */
+    --spark-glow: 48 100% 85%;
+    --coral-light: 355 100% 85%;
+    --lavender: 270 20% 15%;
+    --lavender-dark: 270 40% 85%;
+    --cream: 45 20% 12%;
+    --sage: 140 20% 20%;
+    
+    /* Dark mode gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(var(--lavender)), hsl(var(--midnight)));
+    --gradient-subtle: linear-gradient(180deg, hsl(var(--cream)), hsl(var(--lavender)));
+    
+    /* Dark mode shadows */
+    --shadow-elegant: 0 20px 50px -10px hsl(0 0% 0% / 0.5);
+    --shadow-glow: 0 0 40px hsl(var(--spark) / 0.3);
+    
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -121,6 +150,82 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--spark));
+    border-radius: 3px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--spark) / 0.8);
+  }
+}
+
+@layer components {
+  /* Gradient backgrounds */
+  .bg-gradient-hero {
+    background: var(--gradient-hero);
+  }
+  
+  .bg-gradient-spark {
+    background: var(--gradient-spark);
+  }
+  
+  .bg-gradient-subtle {
+    background: var(--gradient-subtle);
+  }
+  
+  .bg-gradient-warm {
+    background: var(--gradient-warm);
+  }
+  
+  /* Glass effect */
+  .glass {
+    background: hsl(var(--background) / 0.8);
+    backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--border) / 0.5);
+  }
+  
+  /* Enhanced shadows */
+  .shadow-elegant {
+    box-shadow: var(--shadow-elegant);
+  }
+  
+  .shadow-warm {
+    box-shadow: var(--shadow-warm);
+  }
+  
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+  
+  /* Transitions */
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+  
+  .transition-spring {
+    transition: var(--transition-spring);
+  }
+  
+  .transition-gentle {
+    transition: var(--transition-gentle);
   }
 }

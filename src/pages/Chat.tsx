@@ -189,22 +189,22 @@ const Chat = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-gradient-subtle flex flex-col pb-20">
       {/* Header */}
-      <div className="bg-card border-b border-border p-4 flex items-center justify-between">
+      <div className="glass border-b backdrop-blur-lg p-4 flex items-center justify-between sticky top-0 z-40">
         <div className="flex items-center space-x-3">
-          <Avatar className="border-2 border-spark">
+          <Avatar className="border-2 border-spark shadow-warm animate-gentle-bounce">
             <AvatarImage src="" />
             <AvatarFallback className="bg-gradient-to-br from-spark to-coral text-midnight font-bold">
               MC
             </AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="font-semibold">
-              <span className="text-black">Meet</span>
+            <h1 className="font-bold text-lg font-heading">
+              <span className="text-foreground">Meet</span>
               <span className="text-spark">Cute</span>
             </h1>
-            <p className="text-sm text-black">Your AI Memory Assistant</p>
+            <p className="text-sm text-muted-foreground">Your AI Memory Assistant</p>
           </div>
         </div>
         
@@ -260,35 +260,36 @@ const Chat = () => {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        {messages.map((message, index) => (
           <div
             key={message.id}
-            className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+            className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"} animate-fade-in`}
+            style={{ animationDelay: `${index * 0.1}s` }}
           >
-            <div className={`max-w-[80%] ${message.sender === "user" ? "order-2" : "order-1"}`}>
+            <div className={`max-w-[85%] ${message.sender === "user" ? "order-2" : "order-1"}`}>
               {message.sender === "ai" && (
-                <div className="flex items-center space-x-2 mb-2">
-                  <Sparkles className="w-4 h-4 text-spark" />
-                  <span className="text-sm font-medium text-black">MeetCute</span>
+                <div className="flex items-center space-x-2 mb-2 animate-slide-in-left">
+                  <Sparkles className="w-4 h-4 text-spark animate-spark-pulse" />
+                  <span className="text-sm font-medium text-foreground">MeetCute</span>
                 </div>
               )}
               
               <Card className={`${
                 message.sender === "user" 
-                  ? "bg-gradient-to-r from-spark to-coral text-black" 
-                  : "bg-card border-border"
-              } ${message.typing ? "animate-pulse" : ""}`}>
-                <CardContent className="p-3">
-                  <p className={`text-sm whitespace-pre-wrap ${
-                    message.sender === "user" ? "text-black" : "text-black"
+                  ? "bg-gradient-to-r from-spark to-coral text-midnight shadow-warm" 
+                  : "bg-card/80 backdrop-blur-sm border-border/50 shadow-soft"
+              } ${message.typing ? "animate-pulse" : "hover:shadow-elegant transition-all duration-300"}`}>
+                <CardContent className="p-4">
+                  <p className={`text-sm whitespace-pre-wrap leading-relaxed ${
+                    message.sender === "user" ? "text-midnight font-medium" : "text-foreground"
                   }`}>
                     {message.text}
                   </p>
-                  <p className={`text-xs mt-1 ${
+                  <p className={`text-xs mt-2 ${
                     message.sender === "user" 
-                      ? "text-black/70" 
-                      : "text-black/70"
+                      ? "text-midnight/70" 
+                      : "text-muted-foreground"
                   }`}>
                     {message.timestamp.toLocaleTimeString([], { 
                       hour: '2-digit', 
@@ -315,44 +316,52 @@ const Chat = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="p-4 border-t border-border bg-card">
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleRecording}
-            className={`rounded-full ${isRecording ? "bg-coral text-midnight" : ""}`}
-          >
-            {isRecording ? (
-              <MicOff className="w-4 h-4" />
-            ) : (
-              <Mic className="w-4 h-4" />
-            )}
-          </Button>
+      {/* Enhanced Input */}
+      <div className="p-4 border-t border-border/50 glass backdrop-blur-lg">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center space-x-3 mb-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleRecording}
+              className={`rounded-full transition-all duration-300 ${
+                isRecording 
+                  ? "bg-coral text-white shadow-warm animate-spark-pulse" 
+                  : "hover:scale-105"
+              }`}
+            >
+              {isRecording ? (
+                <MicOff className="w-4 h-4" />
+              ) : (
+                <Mic className="w-4 h-4" />
+              )}
+            </Button>
+            
+            <Input
+              placeholder="Share your spark moment... Where were you? What happened?"
+              value={currentMessage}
+              onChange={(e) => setCurrentMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="flex-1 h-12 rounded-xl border-border/50 bg-background/50 backdrop-blur-sm focus:shadow-warm focus:border-spark/50 transition-all duration-300"
+            />
+            
+            <Button
+              variant="spark"
+              size="lg"
+              onClick={handleSendMessage}
+              disabled={!currentMessage.trim()}
+              className="rounded-xl px-6"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
+          </div>
           
-          <Input
-            placeholder="Describe your memory..."
-            value={currentMessage}
-            onChange={(e) => setCurrentMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="flex-1"
-          />
-          
-          <Button
-            variant="spark"
-            size="sm"
-            onClick={handleSendMessage}
-            disabled={!currentMessage.trim()}
-            className="rounded-full px-3"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">
+              💡 <strong>Pro tip:</strong> Mention specific details like time, place, what you were wearing, or what caught your attention
+            </p>
+          </div>
         </div>
-        
-        <p className="text-xs text-black mt-2 text-center">
-          Be specific about time, place, and what happened for better matching
-        </p>
       </div>
     </div>
   );
