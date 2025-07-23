@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import userVideo1 from "@/assets/user-video-1.mp4";
 import userVideo2 from "@/assets/user-video-2.mp4";
+import userVideo3 from "@/assets/user-video-3.mp4";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { 
@@ -60,16 +61,16 @@ const mockVideos: VideoPost[] = [
   },
   {
     id: "3",
-    username: "@jenny_relationships",
-    title: "Red flags vs Green flags in early dating",
-    description: "Pay attention to these subtle signs! Your future self will thank you 🚩✅ What would you add to this list? #redflags #greenflags #datingadvice",
-    videoUrl: "",
+    username: "@creative_content",
+    title: "Amazing moments captured ✨",
+    description: "Real experiences and genuine connections in motion. This is what authentic content looks like! #authentic #realmoments #genuine #creative",
+    videoUrl: userVideo3,
     thumbnailUrl: "",
-    likes: 15600,
-    comments: 1204,
-    shares: 445,
+    likes: 2850,
+    comments: 156,
+    shares: 73,
     isLiked: false,
-    category: "relationship-tips"
+    category: "love-story"
   },
   {
     id: "4",
