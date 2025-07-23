@@ -118,7 +118,7 @@ const Landing = () => {
 
             {/* Tagline */}
             <p className="text-2xl text-white mb-6 font-light drop-shadow-lg">
-              Real connections happen everywhere
+              Real Connections in Real Life
             </p>
             
             <p className="text-lg text-gray-200 mb-12 max-w-2xl mx-auto leading-relaxed drop-shadow-md">
