@@ -118,7 +118,7 @@ const EmailVerification = ({ email, onBack, onVerified }: EmailVerificationProps
                   value={digit}
                   onChange={(e) => handleCodeChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="w-12 h-12 text-center text-lg font-semibold"
+                  className="w-12 h-12 text-center text-lg font-semibold border-2 border-black focus:border-spark focus:ring-spark"
                   disabled={isVerifying}
                 />
               ))}

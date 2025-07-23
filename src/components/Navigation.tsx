@@ -7,10 +7,12 @@ import {
   Home, 
   Settings,
   Sparkles,
-  Play
+  Play,
+  LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface NavigationProps {
   className?: string;
@@ -19,6 +21,7 @@ interface NavigationProps {
 const Navigation = ({ className }: NavigationProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { signOut } = useAuth();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -45,6 +48,11 @@ const Navigation = ({ className }: NavigationProps) => {
       gradient: "from-coral to-coral-light"
     }
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   if (!mounted) return null;
 
@@ -90,6 +98,21 @@ const Navigation = ({ className }: NavigationProps) => {
             </Button>
           );
         })}
+        
+        {/* Sign Out Button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleSignOut}
+          className="flex flex-col items-center gap-1 h-auto py-2 px-3 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95"
+        >
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300 hover:bg-destructive/20">
+            <LogOut className="w-4 h-4 text-muted-foreground hover:text-destructive transition-colors duration-300" />
+          </div>
+          <span className="text-xs font-medium text-muted-foreground">
+            Sign Out
+          </span>
+        </Button>
       </div>
     </nav>
   );

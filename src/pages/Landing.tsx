@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Sparkles, Heart, Camera, Lock } from "lucide-react";
+import { CalendarIcon, Sparkles, Heart, Camera, Lock, LogIn } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import barScene from "@/assets/scene-bar.jpg";
@@ -16,12 +16,21 @@ import concertScene from "@/assets/scene-concert.jpg";
 import gymScene from "@/assets/scene-gym.jpg";
 import CameraModal from "@/components/CameraModal";
 import EmailVerification from "@/components/EmailVerification";
+import { useAuth } from "@/hooks/useAuth";
 
 const Landing = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState<"landing" | "signup" | "email-verification" | "identity-verification">("landing");
   const [showCamera, setShowCamera] = useState(false);
   const [currentSceneIndex, setCurrentSceneIndex] = useState(0);
+
+  // Redirect to feed if user is already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/feed");
+    }
+  }, [user, navigate]);
   
   const scenes = [
     { image: barScene, title: "At the bar" },
@@ -63,8 +72,7 @@ const Landing = () => {
   };
 
   const handleSignup = () => {
-    // Here you'd normally save to database and proceed
-    console.log("Signup completed:", formData);
+    // Navigate to permissions after identity verification
     navigate("/permissions");
   };
 
@@ -118,14 +126,26 @@ const Landing = () => {
             </p>
 
             {/* CTA */}
-            <Button 
-              className="bg-yellow-400 hover:bg-yellow-500 text-black text-lg px-8 py-6 mb-16 font-semibold rounded-full shadow-2xl transition-all duration-300 hover:scale-105"
-              size="lg" 
-              onClick={handleGetStarted}
-            >
-              <Heart className="mr-2" />
-              Start Connecting
-            </Button>
+            <div className="space-y-4 mb-16">
+              <Button 
+                className="bg-yellow-400 hover:bg-yellow-500 text-black text-lg px-8 py-6 font-semibold rounded-full shadow-2xl transition-all duration-300 hover:scale-105"
+                size="lg" 
+                onClick={handleGetStarted}
+              >
+                <Heart className="mr-2" />
+                Start Connecting
+              </Button>
+              
+              <div className="text-center">
+                <p className="text-white/80 text-sm mb-2">Already have an account?</p>
+                <Link to="/auth">
+                  <Button variant="ghost" className="text-yellow-400 hover:text-yellow-300">
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Sign In
+                  </Button>
+                </Link>
+              </div>
+            </div>
 
             {/* Features */}
             <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">

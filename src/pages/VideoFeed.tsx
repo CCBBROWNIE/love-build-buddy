@@ -16,6 +16,9 @@ import {
   User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { VideoUpload } from "@/components/VideoUpload";
 
 interface VideoPost {
   id: string;
@@ -62,27 +65,95 @@ const mockVideos: VideoPost[] = [
 ];
 
 const VideoFeed = () => {
-  // Debug: Log all video URLs on component mount
-  useEffect(() => {
-    console.log("All video URLs:", mockVideos.map(v => ({ id: v.id, url: v.videoUrl })));
-  }, []);
+  const { user } = useAuth();
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [videos, setVideos] = useState(mockVideos);
+  const [videos, setVideos] = useState<VideoPost[]>([]);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleLike = (videoId: string) => {
-    setVideos(prev => prev.map(video => 
-      video.id === videoId 
-        ? { 
-            ...video, 
-            isLiked: !video.isLiked,
-            likes: video.isLiked ? video.likes - 1 : video.likes + 1
-          }
-        : video
-    ));
+  // Fetch videos from database
+  const fetchVideos = async () => {
+    try {
+      const { data: videosData, error } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching videos:', error);
+        // Fallback to mock videos
+        setVideos(mockVideos);
+        return;
+      }
+
+      const formattedVideos: VideoPost[] = videosData.map(video => ({
+        id: video.id,
+        username: `@user_${video.id.slice(0, 8)}`,
+        title: video.title,
+        description: video.description || '',
+        videoUrl: video.video_url,
+        thumbnailUrl: video.thumbnail_url || '',
+        likes: video.likes_count || 0,
+        comments: video.comments_count || 0,
+        shares: video.shares_count || 0,
+        isLiked: false, // We'll check this separately
+        category: video.category as VideoPost['category'] || 'love-story'
+      }));
+
+      // Mix user videos with mock videos for demo
+      setVideos([...formattedVideos, ...mockVideos]);
+    } catch (error) {
+      console.error('Error in fetchVideos:', error);
+      setVideos(mockVideos);
+    }
+  };
+
+  useEffect(() => {
+    fetchVideos();
+  }, []);
+
+  const handleLike = async (videoId: string) => {
+    if (!user) return;
+
+    const video = videos.find(v => v.id === videoId);
+    if (!video) return;
+
+    try {
+      if (video.isLiked) {
+        // Unlike
+        await supabase
+          .from('video_interactions')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('video_id', videoId)
+          .eq('interaction_type', 'like');
+      } else {
+        // Like
+        await supabase
+          .from('video_interactions')
+          .insert({
+            user_id: user.id,
+            video_id: videoId,
+            interaction_type: 'like'
+          });
+      }
+
+      // Update local state
+      setVideos(prev => prev.map(v => 
+        v.id === videoId 
+          ? { 
+              ...v, 
+              isLiked: !v.isLiked,
+              likes: v.isLiked ? v.likes - 1 : v.likes + 1
+            }
+          : v
+      ));
+    } catch (error) {
+      console.error('Error handling like:', error);
+    }
   };
 
   const handleScroll = () => {
@@ -327,6 +398,9 @@ const VideoFeed = () => {
           />
         ))}
       </div>
+
+      {/* Video Upload Button */}
+      <VideoUpload onVideoUploaded={fetchVideos} />
 
       {/* Custom CSS for hiding scrollbar */}
       <style>{`
