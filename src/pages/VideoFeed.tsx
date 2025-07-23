@@ -58,19 +58,6 @@ const mockVideos: VideoPost[] = [
     shares: 89,
     isLiked: false,
     category: "love-story"
-  },
-  {
-    id: "3",
-    username: "@your_video",
-    title: "Your third video",
-    description: "Attempting your new video file",
-    videoUrl: userVideo3,
-    thumbnailUrl: "",
-    likes: 2850,
-    comments: 156,
-    shares: 73,
-    isLiked: false,
-    category: "love-story"
   }
 ];
 
