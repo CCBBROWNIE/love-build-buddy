@@ -68,7 +68,7 @@ const Landing = () => {
               </p>
               
               <p className="text-lg text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
-                Turn those magical missed connections into real relationships. 
+                Turn those memorable missed connections into real relationships. 
                 Describe a moment, and if they remember it too, we'll spark the connection.
               </p>
 
