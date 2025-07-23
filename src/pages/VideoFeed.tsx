@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import userVideo1 from "@/assets/user-video-1.mp4";
 import userVideo2 from "@/assets/user-video-2.mp4";
-import userVideo3 from "@/assets/user-video-3.mp4";
+import userVideo3 from "@/assets/user-video-3-new.mp4";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { 
@@ -61,10 +61,10 @@ const mockVideos: VideoPost[] = [
   },
   {
     id: "3",
-    username: "@third_video",
-    title: "Third video content",
-    description: "This will work using a duplicate of the first video until we solve the format issue",
-    videoUrl: userVideo1, // Using working video temporarily
+    username: "@your_video",
+    title: "Your third video",
+    description: "Attempting your new video file",
+    videoUrl: userVideo3,
     thumbnailUrl: "",
     likes: 2850,
     comments: 156,
