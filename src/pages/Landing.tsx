@@ -168,6 +168,10 @@ const Landing = () => {
                   selected={formData.birthday}
                   onSelect={(date) => setFormData(prev => ({ ...prev, birthday: date }))}
                   disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                  defaultMonth={new Date(1995, 0)} // Start at January 1995 for easier navigation
+                  captionLayout="dropdown-buttons" // Enable year/month dropdowns
+                  fromYear={1940}
+                  toYear={new Date().getFullYear()}
                   initialFocus
                   className="p-3 pointer-events-auto"
                 />
