@@ -37,7 +37,7 @@ All colors MUST be HSL.
     --destructive-foreground: 0 0% 98%;
 
     --border: 0 0% 90%;
-    --input: 0 0% 90%;
+    --input: 0 0% 100%; /* White input background */
     --ring: 48 100% 71%;
 
     /* Custom MeetCute Colors */
