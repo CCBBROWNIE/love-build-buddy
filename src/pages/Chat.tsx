@@ -134,10 +134,10 @@ const Chat = () => {
           </Avatar>
           <div>
             <h1 className="font-semibold">
-              <span className="text-foreground">Meet</span>
+              <span className="text-black">Meet</span>
               <span className="text-spark">Cute</span>
             </h1>
-            <p className="text-sm text-muted-foreground">Your AI Memory Assistant</p>
+            <p className="text-sm text-black">Your AI Memory Assistant</p>
           </div>
         </div>
         
@@ -166,25 +166,25 @@ const Chat = () => {
               {message.sender === "ai" && (
                 <div className="flex items-center space-x-2 mb-2">
                   <Sparkles className="w-4 h-4 text-spark" />
-                  <span className="text-sm font-medium text-foreground">MeetCute</span>
+                  <span className="text-sm font-medium text-black">MeetCute</span>
                 </div>
               )}
               
               <Card className={`${
                 message.sender === "user" 
-                  ? "bg-gradient-to-r from-spark to-coral text-midnight" 
+                  ? "bg-gradient-to-r from-spark to-coral text-black" 
                   : "bg-card border-border"
               } ${message.typing ? "animate-pulse" : ""}`}>
                 <CardContent className="p-3">
                   <p className={`text-sm whitespace-pre-wrap ${
-                    message.sender === "user" ? "text-midnight" : "text-foreground"
+                    message.sender === "user" ? "text-black" : "text-black"
                   }`}>
                     {message.text}
                   </p>
                   <p className={`text-xs mt-1 ${
                     message.sender === "user" 
-                      ? "text-midnight/70" 
-                      : "text-muted-foreground"
+                      ? "text-black/70" 
+                      : "text-black/70"
                   }`}>
                     {message.timestamp.toLocaleTimeString([], { 
                       hour: '2-digit', 
@@ -202,7 +202,7 @@ const Chat = () => {
             <div className="max-w-[80%]">
               <div className="flex items-center space-x-2 mb-2">
                 <Sparkles className="w-4 h-4 text-spark animate-spin" />
-                <span className="text-sm font-medium text-foreground">MeetCute is thinking...</span>
+                <span className="text-sm font-medium text-black">MeetCute is thinking...</span>
               </div>
             </div>
           </div>
@@ -246,7 +246,7 @@ const Chat = () => {
           </Button>
         </div>
         
-        <p className="text-xs text-muted-foreground mt-2 text-center">
+        <p className="text-xs text-black mt-2 text-center">
           Be specific about time, place, and what happened for better matching
         </p>
       </div>
