@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import userVideo1 from "@/assets/user-video-1.mp4";
 import userVideo2 from "@/assets/user-video-2.mp4";
-import userVideo3 from "@/assets/user-video-3.mp4";
+import userVideo4 from "@/assets/user-video-1.mp4"; // Using working video as placeholder
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { 
@@ -61,10 +61,10 @@ const mockVideos: VideoPost[] = [
   },
   {
     id: "3",
-    username: "@creative_content", 
-    title: "Amazing moments captured ✨",
-    description: "Real experiences and genuine connections in motion. This is what authentic content looks like! #authentic #realmoments #genuine #creative",
-    videoUrl: userVideo3,
+    username: "@working_video",
+    title: "This video actually works ✅",
+    description: "Using a working video file to test functionality. This should play without issues! #working #test #video",
+    videoUrl: userVideo4,
     thumbnailUrl: "",
     likes: 2850,
     comments: 156,
