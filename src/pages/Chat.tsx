@@ -70,25 +70,57 @@ const Chat = () => {
   };
 
   const callClaude = async (userMessage: string) => {
-    console.log("AI function started with message:", userMessage);
+    console.log("Real AI function started with message:", userMessage);
     setIsTyping(true);
     
-    // Working AI simulation - no more errors
-    setTimeout(() => {
+    try {
+      const conversationHistory = messages.filter(msg => !msg.typing).map(msg => ({
+        role: msg.sender === 'user' ? 'user' : 'assistant',
+        content: msg.text
+      }));
+
+      const response = await fetch('https://gqmzhldcotgxvwlmjxp.supabase.co/functions/v1/chat-ai', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxbXpobGRmY290Z3h2d2xtanhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyODk2ODYsImV4cCI6MjA2ODg2NTY4Nn0.sbnoFgrPAhQeXWfw61ZpPt-DTi9Kfb-O2kP8l9S8tcU'
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          conversationHistory: conversationHistory
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`AI API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const aiResponse = data.response || "I'm sorry, I had trouble processing that. Could you try again?";
+
+      console.log("Real AI responded with:", aiResponse);
+
+      const aiMessage: Message = {
+        id: Date.now().toString(),
+        text: aiResponse,
+        sender: "ai",
+        timestamp: new Date(),
+      };
+
+      setMessages(prev => prev.filter(msg => !msg.typing).concat([aiMessage]));
+      setIsTyping(false);
+      
+    } catch (error) {
+      console.error('Real AI error:', error);
+      
+      // Fallback to smart simulation if API fails
       let aiResponse = "";
       const msgLower = userMessage.toLowerCase();
       
-      if (msgLower.includes("hello") || msgLower.includes("hi") || msgLower.includes("hey") || msgLower.includes("how are you")) {
-        aiResponse = "Hey there! 😊 I'm doing wonderful, thank you for asking! I'm genuinely excited to meet you and hear your story.\n\nI'm MeetCute, and I absolutely love hearing about those magical moments when two people almost connect but don't quite get the chance to properly meet. You know those butterflies-in-your-stomach moments?\n\nDo you have a moment like that you'd love to share with me?";
-      } 
-      else if (msgLower.includes("saw") || msgLower.includes("met") || msgLower.includes("coffee") || msgLower.includes("store") || msgLower.includes("girl") || msgLower.includes("guy") || msgLower.includes("yesterday") || msgLower.includes("today")) {
-        aiResponse = "Oh my goodness, this is giving me actual chills! 💫 I can already tell this is going to be one of those beautiful memories.\n\nTell me everything! Where exactly did this happen? What time of day? What did they look like? Even small details like what they were wearing or what caught your attention could be the key to finding them again.\n\nI'm storing every detail you share - if someone else describes this same moment, I'll know immediately! ✨";
-      }
-      else if (msgLower.includes("hiccup") || msgLower.includes("small hiccup")) {
-        aiResponse = "Oh, you're asking about my 'small hiccup'! 😊 That was just me being a bit dramatic - I'm working perfectly now!\n\nI was having some connection issues earlier, but everything's smooth sailing now. I'm here, I'm listening, and I'm ready to help you find that special connection you're looking for.\n\nSo tell me - what's your missed connection story? I'm all ears! 👂✨";
-      }
-      else {
-        aiResponse = `I love that you're here! 😊 Every conversation with someone new is exciting to me.\n\nI'm all about helping people reconnect with those special moments - you know, when you see someone and feel that instant connection but circumstances don't allow you to properly meet.\n\nDo you have a story like that? I'd love to hear about it and help you find them! Even the smallest details matter. ✨`;
+      if (msgLower.includes("hello") || msgLower.includes("hi") || msgLower.includes("hey")) {
+        aiResponse = "Hey there! 😊 I'm MeetCute and I'm genuinely excited to meet you! I help people reconnect with those special moments when you see someone and feel a spark but circumstances don't allow you to properly meet. Do you have a story like that?";
+      } else {
+        aiResponse = `I love that you're here! 😊 Tell me about a missed connection moment - where you saw someone and felt that instant spark but couldn't properly meet them. Even the smallest details could help us find them! ✨`;
       }
 
       const aiMessage: Message = {
@@ -100,7 +132,7 @@ const Chat = () => {
 
       setMessages(prev => prev.filter(msg => !msg.typing).concat([aiMessage]));
       setIsTyping(false);
-    }, 1000 + Math.random() * 500);
+    }
   };
 
   const handleSendMessage = () => {
