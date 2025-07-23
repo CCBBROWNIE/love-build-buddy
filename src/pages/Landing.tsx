@@ -10,10 +10,12 @@ import { CalendarIcon, Sparkles, Heart, Camera } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import heroImage from "@/assets/hero-meetcute.jpg";
+import CameraModal from "@/components/CameraModal";
 
 const Landing = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<"landing" | "signup">("landing");
+  const [showCamera, setShowCamera] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -197,21 +199,10 @@ const Landing = () => {
               <p className="text-sm text-muted-foreground mb-2">
                 Take a quick selfie for identity verification
               </p>
-              <input
-                type="file"
-                accept="image/*"
-                capture="user"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleFileUpload("selfie", file);
-                }}
-                className="hidden"
-                id="selfie-upload"
-              />
               <Button 
                 variant="spark" 
                 size="sm"
-                onClick={() => document.getElementById("selfie-upload")?.click()}
+                onClick={() => setShowCamera(true)}
               >
                 Take Selfie
               </Button>
@@ -265,6 +256,12 @@ const Landing = () => {
           </p>
         </CardContent>
       </Card>
+
+      <CameraModal
+        isOpen={showCamera}
+        onClose={() => setShowCamera(false)}
+        onCapture={(file) => handleFileUpload("selfie", file)}
+      />
     </div>
   );
 };
