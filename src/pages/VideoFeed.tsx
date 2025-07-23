@@ -108,7 +108,9 @@ const VideoFeed = () => {
       videoRefs.current.forEach((video, idx) => {
         if (video) {
           if (idx === newIndex) {
-            video.play();
+            video.play().catch(error => {
+              console.error(`Error playing video ${idx}:`, error);
+            });
           } else {
             video.pause();
           }
@@ -121,7 +123,9 @@ const VideoFeed = () => {
     const currentVideo = videoRefs.current[currentVideoIndex];
     if (currentVideo) {
       if (currentVideo.paused) {
-        currentVideo.play();
+        currentVideo.play().catch(error => {
+          console.error(`Error playing current video:`, error);
+        });
         setIsPlaying(true);
       } else {
         currentVideo.pause();
@@ -179,8 +183,13 @@ const VideoFeed = () => {
                 playsInline
                 onLoadedData={() => {
                   if (index === currentVideoIndex && videoRefs.current[index]) {
-                    videoRefs.current[index]?.play();
+                    videoRefs.current[index]?.play().catch(error => {
+                      console.error(`Error playing video ${index} on load:`, error);
+                    });
                   }
+                }}
+                onError={(e) => {
+                  console.error(`Video ${index} failed to load:`, e);
                 }}
               />
             ) : (
