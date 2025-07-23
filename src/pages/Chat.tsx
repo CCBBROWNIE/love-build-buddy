@@ -53,7 +53,9 @@ const Chat = () => {
     setTimeout(() => {
       let aiResponse = "";
       
-      // Handle conversational/personal questions naturally
+      console.log("Processing message:", userMessage);
+      
+      // Handle conversational questions first
       if (userMessage.toLowerCase().includes("how are you") || userMessage.toLowerCase().includes("how's it going")) {
         aiResponse = "I'm doing really well, thank you for asking! I've been helping people find their missed connections all day, and honestly, every story I hear makes me feel more optimistic about human connection.\n\nWhat about you? Ready to share a memory that's been on your mind?";
       }
@@ -66,40 +68,51 @@ const Chat = () => {
       else if (userMessage.toLowerCase().includes("hello") || userMessage.toLowerCase().includes("hi")) {
         aiResponse = "Hi there! 👋 I'm MeetCute, and I'm genuinely excited to meet you.\n\nI spend my days helping people reconnect with those amazing humans they crossed paths with but never got to properly meet. You know that feeling when you see someone and there's just... a spark? I live for those stories.\n\nDo you have a moment like that you'd like to share with me?";
       }
+      // Handle memory stories
+      else if (userMessage.length > 50) {
+        // Check if this looks like a complete memory story
+        const mentionsTime = userMessage.toLowerCase().includes("yesterday") || 
+                           userMessage.toLowerCase().includes("today") || 
+                           userMessage.toLowerCase().includes("5pm") ||
+                           userMessage.toLowerCase().includes("morning") ||
+                           userMessage.toLowerCase().includes("afternoon") ||
+                           userMessage.toLowerCase().includes("evening");
+                           
+        const mentionsLocation = userMessage.toLowerCase().includes("apartment") ||
+                                userMessage.toLowerCase().includes("complex") ||
+                                userMessage.toLowerCase().includes("gym") ||
+                                userMessage.toLowerCase().includes("coffee") ||
+                                userMessage.toLowerCase().includes("store") ||
+                                userMessage.toLowerCase().includes("at ") ||
+                                userMessage.toLowerCase().includes("in ");
+                                
+        const mentionsDescription = userMessage.toLowerCase().includes("hair") ||
+                                   userMessage.toLowerCase().includes("beautiful") ||
+                                   userMessage.toLowerCase().includes("girl") ||
+                                   userMessage.toLowerCase().includes("guy") ||
+                                   userMessage.toLowerCase().includes("wearing");
+        
+        console.log("Time mentioned:", mentionsTime);
+        console.log("Location mentioned:", mentionsLocation);  
+        console.log("Description mentioned:", mentionsDescription);
+        
+        if (mentionsTime && mentionsLocation && mentionsDescription) {
+          aiResponse = "This gave me actual goosebumps! 💫 What a beautiful, detailed memory.\n\nI'm carefully storing this in your Spark Vault with all those perfect details about the time, place, and person. If someone else describes this same moment from their perspective, I'll know immediately.\n\nIs there anything else about that moment - maybe the vibe, any brief interaction, or what made it feel so special? The more details, the better chance of finding your match!";
+        } else {
+          // Ask for missing pieces
+          if (!mentionsTime) {
+            aiResponse = "I can already feel the connection in your story! This is exactly the kind of moment that gives me chills.\n\nI need one crucial detail though:\n⏰ **When exactly did this happen?** (day, time, or timeframe)\n\nTiming helps me match you with someone who was there at that exact moment!";
+          } else if (!mentionsLocation) {
+            aiResponse = "I love the details you're sharing! Now tell me:\n📍 **Where exactly did this happen?** (specific place, venue, area)\n\nLocation is key to finding someone who was in that exact same spot!";
+          } else if (!mentionsDescription) {
+            aiResponse = "Great timing and location info! Now help me see them through your eyes:\n👤 **What did they look like?** (hair, style, what they were wearing, anything that caught your attention)\n\nThese visual details help me confirm when someone else describes the same person!";
+          } else {
+            aiResponse = "This is coming together beautifully! Just help me fill in any missing pieces about the exact time, specific location, or what they looked like. The more complete your memory, the better chance of finding someone who remembers you too!";
+          }
+        }
+      }
       else {
-        // Check for missing key information in memory stories
-        const hasTime = /\b(morning|afternoon|evening|night|\d{1,2}:\d{2}|\d{1,2}(am|pm)|yesterday|today|last week|monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|march|april|may|june|july|august|september|october|november|december|\d{1,2}\/\d{1,2}|\d{4})\b/i.test(userMessage);
-        const hasLocation = /\b(at|in|near|outside|inside|gym|coffee|cafe|store|park|concert|beach|bar|restaurant|school|work|office|street|mall|theater|library|hospital|airport|train|bus|uber|lyft|apartment|complex|building|plaza|center)\b/i.test(userMessage);
-        const hasDescription = /\b(wearing|had|looked|tall|short|hair|eyes|shirt|dress|jacket|smile|beautiful|handsome|cute|black|white|girl|guy|man|woman)\b/i.test(userMessage);
-        
-        // Debug logging
-        console.log("User message:", userMessage);
-        console.log("Has time:", hasTime);
-        console.log("Has location:", hasLocation);
-        console.log("Has description:", hasDescription);
-        console.log("Message length:", userMessage.length);
-        
-        if (userMessage.length < 20) {
-          aiResponse = "I can tell you're thinking about someone special! I'd love to hear the whole story though.\n\nCan you paint me a detailed picture? The more you share, the better chance I have of finding someone who remembers that exact same moment. What happened?";
-        }
-        else if (!hasTime && !hasLocation) {
-          aiResponse = "Wow, I can already feel the connection in your story! This is exactly the kind of moment that gives me chills.\n\nTo help me find your match, I need two crucial pieces:\n\n📍 **Where exactly did this happen?** (the specific place)\n⏰ **When was this?** (day, time, or timeframe)\n\nThese details are like fingerprints - they help me match you with someone who was there at that exact moment!";
-        }
-        else if (!hasTime) {
-          aiResponse = "I love how detailed you are about the place! That really helps me picture the scene.\n\nNow I'm curious about the timing:\n⏰ **When did this magical moment happen?**\n• What day was it?\n• What time of day?\n• How recent was this?\n\nTiming is everything when it comes to finding someone who shared that same moment with you!";
-        }
-        else if (!hasLocation) {
-          aiResponse = "The timing details are perfect! I can almost feel myself there in that moment.\n\nNow tell me:\n📍 **Where exactly did this unfold?**\n• What's the specific place?\n• What area of the city?\n• Any details about the setting?\n\nLocation is key to finding someone who was in that exact same spot!";
-        }
-        else if (!hasDescription) {
-          aiResponse = "This is beautiful! I have the when and where locked in.\n\nNow help me see them through your eyes:\n👤 **What did they look like?**\n• Hair, style, what they were wearing?\n• Anything that caught your attention?\n• What made you notice them?\n\nThese visual details help me confirm when someone else describes remembering the same person!";
-        }
-        else if (userMessage.length > 80) {
-          aiResponse = "This gave me actual goosebumps! 💫 What a beautiful, detailed memory.\n\nI'm carefully storing this in your Spark Vault with all those perfect details. If someone else describes this same moment from their perspective, I'll know immediately.\n\nIs there anything else about that moment - maybe the vibe, any brief interaction, or what made it feel so special?";
-        }
-        else {
-          aiResponse = "I'm loving this story! You're giving me some great pieces, but I want to make sure I don't miss anything important.\n\nCould you add a bit more about:\n• The exact location?\n• What time this happened?\n• What they looked like?\n\nI'm pretty good at this matching thing, but the devil's in the details!";
-        }
+        aiResponse = "I can tell you're thinking about someone special! I'd love to hear the whole story though.\n\nCan you paint me a detailed picture? The more you share about when and where this happened, and what they looked like, the better chance I have of finding someone who remembers that exact same moment!";
       }
 
       const aiMessage: Message = {
@@ -109,6 +122,7 @@ const Chat = () => {
         timestamp: new Date(),
       };
 
+      console.log("AI Response:", aiResponse);
       setMessages(prev => prev.filter(msg => !msg.typing).concat([aiMessage]));
       setIsTyping(false);
     }, 1500);
