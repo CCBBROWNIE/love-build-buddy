@@ -261,7 +261,7 @@ const Landing = () => {
           </Button>
 
           <p className="text-xs text-center text-muted-foreground">
-            By signing up, you agree to help create magical connections
+            By signing up, you agree to help create memorable connections
           </p>
         </CardContent>
       </Card>
