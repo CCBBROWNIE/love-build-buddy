@@ -177,33 +177,31 @@ const VideoFeed = () => {
           >
             {/* Video Background */}
             {video.videoUrl ? (
-              <video
-                ref={el => videoRefs.current[index] = el}
-                className="absolute inset-0 w-full h-full object-cover"
-                autoPlay={index === currentVideoIndex}
-                loop
-                muted={isMuted}
-                playsInline
-                preload="auto"
-                controls={false}
-                onCanPlay={() => {
-                  console.log(`Video ${index} can play`);
-                  if (index === currentVideoIndex && videoRefs.current[index]) {
-                    videoRefs.current[index]?.play().catch(error => {
-                      console.error(`Error playing video ${index}:`, error);
-                    });
-                  }
-                }}
-                onError={(e) => {
-                  console.error(`Video ${index} error:`, e.currentTarget.error);
-                }}
-                onLoadStart={() => console.log(`Video ${index} load started`)}
-                onLoadedMetadata={() => console.log(`Video ${index} metadata loaded`)}
-                onLoadedData={() => console.log(`Video ${index} data loaded`)}
-              >
-                <source src={video.videoUrl} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
+              <div>
+                <video
+                  ref={el => videoRefs.current[index] = el}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  autoPlay={index === currentVideoIndex}
+                  loop
+                  muted={isMuted}
+                  playsInline
+                  preload="auto"
+                  onCanPlay={() => {
+                    console.log(`✅ Video ${index} CAN PLAY`);
+                  }}
+                  onError={(e) => {
+                    console.error(`❌ Video ${index} ERROR:`, e.currentTarget.error);
+                  }}
+                  onLoadStart={() => console.log(`📥 Video ${index} LOAD START`)}
+                  onLoadedData={() => console.log(`✅ Video ${index} DATA LOADED`)}
+                >
+                  <source src={video.videoUrl} type="video/mp4" />
+                </video>
+                {/* Show video info for debugging */}
+                <div className="absolute top-4 left-4 bg-black/50 text-white p-2 rounded text-xs">
+                  Video {index}: {video.videoUrl.split('/').pop()}
+                </div>
+              </div>
             ) : (
               <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900">
                 <div className="absolute inset-0 flex items-center justify-center">
