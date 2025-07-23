@@ -13,12 +13,20 @@ import {
   Volume2,
   VolumeX,
   MoreHorizontal,
-  User
+  User,
+  Trash2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { VideoUpload } from "@/components/VideoUpload";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface VideoPost {
   id: string;
@@ -66,6 +74,7 @@ const mockVideos: VideoPost[] = [
 
 const VideoFeed = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [videos, setVideos] = useState<VideoPost[]>([]);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -153,6 +162,79 @@ const VideoFeed = () => {
       ));
     } catch (error) {
       console.error('Error handling like:', error);
+    }
+  };
+
+  const handleDeleteVideo = async (videoId: string) => {
+    if (!user) return;
+
+    try {
+      // Check if this video belongs to the current user
+      const { data: videoData, error: fetchError } = await supabase
+        .from('videos')
+        .select('user_id, video_url')
+        .eq('id', videoId)
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching video:', fetchError);
+        return;
+      }
+
+      if (videoData.user_id !== user.id) {
+        toast({
+          title: "Cannot delete video",
+          description: "You can only delete your own videos.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Delete video from database
+      const { error: deleteError } = await supabase
+        .from('videos')
+        .delete()
+        .eq('id', videoId);
+
+      if (deleteError) {
+        console.error('Error deleting video:', deleteError);
+        toast({
+          title: "Error deleting video",
+          description: "Failed to delete video. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Delete video file from storage
+      if (videoData.video_url) {
+        const url = new URL(videoData.video_url);
+        const pathParts = url.pathname.split('/');
+        const fileName = pathParts.slice(-2).join('/'); // user_id/filename
+        
+        await supabase.storage
+          .from('user-videos')
+          .remove([fileName]);
+      }
+
+      // Update local state
+      setVideos(prev => prev.filter(v => v.id !== videoId));
+      
+      toast({
+        title: "Video deleted",
+        description: "Your video has been deleted successfully.",
+      });
+
+      // Refresh videos to ensure consistency
+      fetchVideos();
+
+    } catch (error) {
+      console.error('Error in handleDeleteVideo:', error);
+      toast({
+        title: "Error deleting video",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -350,13 +432,28 @@ const VideoFeed = () => {
                   </Button>
 
                   {/* More Options */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex flex-col items-center p-2 hover:bg-white/10 rounded-full"
-                  >
-                    <MoreHorizontal className="w-7 h-7 text-white" />
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex flex-col items-center p-2 hover:bg-white/10 rounded-full"
+                      >
+                        <MoreHorizontal className="w-7 h-7 text-white" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="bg-background border border-border">
+                      {user && video.id && !video.id.startsWith('mock') && (
+                        <DropdownMenuItem
+                          onClick={() => handleDeleteVideo(video.id)}
+                          className="text-destructive flex items-center gap-2 cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Delete Video
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             </div>
