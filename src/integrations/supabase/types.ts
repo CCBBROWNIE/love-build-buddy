@@ -14,7 +14,175 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      memories: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          location: string | null
+          match_id: string | null
+          status: string | null
+          timestamp: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          location?: string | null
+          match_id?: string | null
+          status?: string | null
+          timestamp: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          location?: string | null
+          match_id?: string | null
+          status?: string | null
+          timestamp?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memories_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "memories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          bio: string | null
+          birthday: string
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          is_verified: boolean | null
+          last_name: string
+          profile_photo_url: string | null
+          updated_at: string
+          user_id: string
+          verification_selfie_url: string | null
+        }
+        Insert: {
+          bio?: string | null
+          birthday: string
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          is_verified?: boolean | null
+          last_name: string
+          profile_photo_url?: string | null
+          updated_at?: string
+          user_id: string
+          verification_selfie_url?: string | null
+        }
+        Update: {
+          bio?: string | null
+          birthday?: string
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          is_verified?: boolean | null
+          last_name?: string
+          profile_photo_url?: string | null
+          updated_at?: string
+          user_id?: string
+          verification_selfie_url?: string | null
+        }
+        Relationships: []
+      }
+      video_interactions: {
+        Row: {
+          created_at: string
+          id: string
+          interaction_type: string
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interaction_type: string
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interaction_type?: string
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_interactions_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      videos: {
+        Row: {
+          category: string | null
+          comments_count: number | null
+          created_at: string
+          description: string | null
+          id: string
+          likes_count: number | null
+          shares_count: number | null
+          status: string | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          video_url: string
+        }
+        Insert: {
+          category?: string | null
+          comments_count?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          likes_count?: number | null
+          shares_count?: number | null
+          status?: string | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          video_url: string
+        }
+        Update: {
+          category?: string | null
+          comments_count?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          likes_count?: number | null
+          shares_count?: number | null
+          status?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          video_url?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
