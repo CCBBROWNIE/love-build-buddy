@@ -134,11 +134,17 @@ const CameraModal = ({ isOpen, onClose, onCapture }: CameraModalProps) => {
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold flex items-center">
               <Camera className="w-5 h-5 mr-2 text-spark" />
-              Take Selfie
+              Identity Verification
             </h3>
             <Button variant="ghost" size="sm" onClick={handleClose}>
               <X className="w-4 h-4" />
             </Button>
+          </div>
+
+          <div className="mb-4 p-3 bg-muted/50 rounded-lg">
+            <p className="text-sm text-muted-foreground text-center">
+              Take a live selfie to verify it's really you. This helps keep MeetCute authentic and builds trust for meaningful connections.
+            </p>
           </div>
 
           <div className="space-y-4">

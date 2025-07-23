@@ -11,10 +11,11 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import heroImage from "@/assets/hero-meetcute.jpg";
 import CameraModal from "@/components/CameraModal";
+import EmailVerification from "@/components/EmailVerification";
 
 const Landing = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState<"landing" | "signup">("landing");
+  const [step, setStep] = useState<"landing" | "signup" | "email-verification" | "identity-verification">("landing");
   const [showCamera, setShowCamera] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -29,9 +30,19 @@ const Landing = () => {
     setStep("signup");
   };
 
+  const handleEmailSignup = () => {
+    // Move to email verification step
+    setStep("email-verification");
+  };
+
+  const handleEmailVerified = () => {
+    // Move to identity verification (camera selfie)
+    setStep("identity-verification");
+  };
+
   const handleSignup = () => {
-    // Here you'd normally save to database
-    console.log("Signup data:", formData);
+    // Here you'd normally save to database and proceed
+    console.log("Signup completed:", formData);
     navigate("/permissions");
   };
 
@@ -125,6 +136,90 @@ const Landing = () => {
     );
   }
 
+  if (step === "email-verification") {
+    return (
+      <EmailVerification
+        email={formData.email}
+        onBack={() => setStep("signup")}
+        onVerified={handleEmailVerified}
+      />
+    );
+  }
+
+  if (step === "identity-verification") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-xl">
+          <CardHeader className="text-center pb-4">
+            <div className="flex items-center justify-center mb-4">
+              <Sparkles className="w-6 h-6 text-spark mr-2" />
+              <CardTitle className="text-2xl">
+                <span className="text-midnight">Meet</span>
+                <span className="text-spark">Cute</span>
+              </CardTitle>
+            </div>
+            <p className="text-muted-foreground">Identity Verification</p>
+          </CardHeader>
+
+          <CardContent className="space-y-6">
+            <div className="text-center">
+              <Camera className="w-16 h-16 text-spark mx-auto mb-4" />
+              <h3 className="font-semibold text-lg mb-2">Verify it's really you</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                Take a live selfie to confirm your identity. This helps keep MeetCute authentic and builds trust for meaningful connections.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-4 bg-muted/30 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-spark rounded-full"></div>
+                  <span className="text-sm">Live photo verification</span>
+                </div>
+                <div className="flex items-center space-x-3 mt-2">
+                  <div className="w-2 h-2 bg-spark rounded-full"></div>
+                  <span className="text-sm">Your photo stays private</span>
+                </div>
+                <div className="flex items-center space-x-3 mt-2">
+                  <div className="w-2 h-2 bg-spark rounded-full"></div>
+                  <span className="text-sm">Used only for verification</span>
+                </div>
+              </div>
+
+              <Button
+                variant="spark"
+                className="w-full"
+                onClick={() => setShowCamera(true)}
+              >
+                <Camera className="w-4 h-4 mr-2" />
+                Take Verification Selfie
+              </Button>
+
+              {formData.selfiePhoto && (
+                <div className="text-center">
+                  <p className="text-sm text-spark font-medium">✓ Verification photo captured</p>
+                  <Button
+                    variant="spark"
+                    className="w-full mt-4"
+                    onClick={handleSignup}
+                  >
+                    Complete Verification
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <CameraModal
+          isOpen={showCamera}
+          onClose={() => setShowCamera(false)}
+          onCapture={(file) => handleFileUpload("selfie", file)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-xl">
@@ -192,67 +287,17 @@ const Landing = () => {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Verification Photo</Label>
-            <div className="border-2 border-dashed border-border rounded-lg p-4 text-center">
-              <Camera className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground mb-2">
-                Take a quick selfie for identity verification
-              </p>
-              <Button 
-                variant="spark" 
-                size="sm"
-                onClick={() => setShowCamera(true)}
-              >
-                Take Selfie
-              </Button>
-              {formData.selfiePhoto && (
-                <p className="text-xs text-spark mt-2">✓ Photo taken</p>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Profile Photo</Label>
-            <div className="border-2 border-dashed border-border rounded-lg p-4 text-center">
-              <Heart className="w-8 h-8 text-coral mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground mb-2">
-                Upload your best photo for your profile
-              </p>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleFileUpload("profile", file);
-                }}
-                className="hidden"
-                id="profile-upload"
-              />
-              <Button 
-                variant="spark" 
-                size="sm"
-                onClick={() => document.getElementById("profile-upload")?.click()}
-              >
-                Choose Photo
-              </Button>
-              {formData.profilePhoto && (
-                <p className="text-xs text-spark mt-2">✓ Photo uploaded</p>
-              )}
-            </div>
-          </div>
-
           <Button 
             variant="spark" 
             className="w-full" 
-            onClick={handleSignup}
-            disabled={!formData.firstName || !formData.lastName || !formData.birthday || !formData.email || !formData.selfiePhoto || !formData.profilePhoto}
+            onClick={handleEmailSignup}
+            disabled={!formData.firstName || !formData.lastName || !formData.birthday || !formData.email}
           >
-            Create Account
+            Continue to Verification
           </Button>
 
           <p className="text-xs text-center text-muted-foreground">
-            By signing up, you agree to help create memorable connections
+            We'll verify your email and identity to keep MeetCute authentic
           </p>
         </CardContent>
       </Card>
