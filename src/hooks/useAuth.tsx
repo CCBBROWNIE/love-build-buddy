@@ -9,6 +9,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, userData: SignUpData) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  verifyEmail: (email: string, code: string) => Promise<{ error: any }>;
   loading: boolean;
 }
 
@@ -48,6 +49,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, userData: SignUpData) => {
     try {
+      // Generate 6-digit verification code
+      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // Store verification code in database
+      const { error: codeError } = await supabase
+        .from('email_verifications')
+        .insert({
+          email: email,
+          code: verificationCode
+        });
+
+      if (codeError) {
+        console.error('Error storing verification code:', codeError);
+        toast({
+          title: "Verification setup failed",
+          description: "Please try again.",
+          variant: "destructive",
+        });
+        return { error: codeError };
+      }
+
+      // Send verification email
+      const { error: emailError } = await supabase.functions.invoke('send-verification', {
+        body: {
+          email: email,
+          code: verificationCode
+        }
+      });
+
+      if (emailError) {
+        console.error('Error sending verification email:', emailError);
+        toast({
+          title: "Email sending failed",
+          description: "Verification code couldn't be sent. Please try again.",
+          variant: "destructive",
+        });
+        return { error: emailError };
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -87,8 +127,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         toast({
-          title: "Account created!",
-          description: "Welcome to MeetCute! Your account has been created successfully."
+          title: "Verification email sent!",
+          description: "Please check your email and enter the 6-digit code."
         });
       }
 
@@ -143,12 +183,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const verifyEmail = async (email: string, code: string) => {
+    try {
+      const { error } = await supabase.functions.invoke('verify-code', {
+        body: { email, code }
+      });
+
+      if (error) {
+        toast({
+          title: "Verification failed",
+          description: "Invalid or expired code. Please try again.",
+          variant: "destructive",
+        });
+        return { error };
+      }
+
+      toast({
+        title: "Email verified!",
+        description: "Your account has been verified successfully.",
+      });
+
+      return { error: null };
+    } catch (error: any) {
+      toast({
+        title: "Verification failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      return { error };
+    }
+  };
+
   const value = {
     user,
     session,
     signUp,
     signIn,
     signOut,
+    verifyEmail,
     loading
   };
 

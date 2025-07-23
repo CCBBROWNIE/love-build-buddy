@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, Mail, ArrowLeft, Loader2 } from "lucide-react";
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface EmailVerificationProps {
   email: string;
@@ -60,25 +62,44 @@ const EmailVerification = ({ email, onBack, onVerified }: EmailVerificationProps
   const handleVerify = async (verificationCode: string) => {
     setIsVerifying(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsVerifying(false);
-      // For demo purposes, accept any 6-digit code
-      if (verificationCode.length === 6) {
-        onVerified();
-      } else {
-        // Reset code on failure
-        setCode(["", "", "", "", "", ""]);
-        inputRefs.current[0]?.focus();
-      }
-    }, 1500);
+    const { verifyEmail } = useAuth();
+    const { error } = await verifyEmail(email, verificationCode);
+    
+    setIsVerifying(false);
+    
+    if (!error) {
+      onVerified();
+    } else {
+      // Reset code on failure
+      setCode(["", "", "", "", "", ""]);
+      inputRefs.current[0]?.focus();
+    }
   };
 
-  const handleResend = () => {
+  const handleResend = async () => {
     setCanResend(false);
     setCountdown(60);
-    // Here you'd trigger a new verification email
-    console.log("Resending verification code to:", email);
+    
+    // Generate new verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Store new verification code
+    await supabase
+      .from('email_verifications')
+      .insert({
+        email: email,
+        code: verificationCode
+      });
+
+    // Send new verification email
+    await supabase.functions.invoke('send-verification', {
+      body: {
+        email: email,
+        code: verificationCode
+      }
+    });
+    
+    console.log("Resent verification code to:", email);
   };
 
   return (
