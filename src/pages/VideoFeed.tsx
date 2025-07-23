@@ -75,6 +75,10 @@ const mockVideos: VideoPost[] = [
 ];
 
 const VideoFeed = () => {
+  // Debug: Log all video URLs on component mount
+  useEffect(() => {
+    console.log("All video URLs:", mockVideos.map(v => ({ id: v.id, url: v.videoUrl })));
+  }, []);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [videos, setVideos] = useState(mockVideos);
   const [isPlaying, setIsPlaying] = useState(true);
