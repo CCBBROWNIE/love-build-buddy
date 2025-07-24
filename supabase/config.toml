@@ -1,1 +1,39 @@
 project_id = "gqmzhldfcotgxvwlmjxp"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+port = 54324
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
+refresh_token_rotation_enabled = true
+secure_password_change_enabled = true
+enable_signup = true
+
+[db]
+port = 54322
+
+[edge_functions.chat-ai]
+verify_jwt = false
+
+[edge_functions.send-verification]
+verify_jwt = false
+
+[edge_functions.verify-code]
+verify_jwt = false
+
+[edge_functions.memory-processor]
+verify_jwt = false
+
+[storage]
+enabled = true
+port = 54324
+file_size_limit = "50MiB"
+image_transformation = {enabled = true}
