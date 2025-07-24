@@ -268,20 +268,14 @@ const VideoFeed = () => {
     }
   };
 
-  const handleScroll = () => {
-    if (!containerRef.current) return;
-    
-    const scrollTop = containerRef.current.scrollTop;
-    const itemHeight = containerRef.current.clientHeight;
-    const newIndex = Math.round(scrollTop / itemHeight);
-    
-    if (newIndex !== currentVideoIndex && newIndex >= 0 && newIndex < videos.length) {
-      setCurrentVideoIndex(newIndex);
+  const handleVideoIntersection = (index: number, isVisible: boolean) => {
+    if (isVisible && index !== currentVideoIndex) {
+      setCurrentVideoIndex(index);
       
       // Pause all videos except the current one
       videoRefs.current.forEach((video, idx) => {
         if (video) {
-          if (idx === newIndex) {
+          if (idx === index) {
             video.play().catch(error => {
               console.error(`Error playing video ${idx}:`, error);
             });
@@ -333,24 +327,24 @@ const VideoFeed = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black">
+    <div className="min-h-screen bg-background p-4">
       {/* Video Feed Container */}
       <div
         ref={containerRef}
-        className="h-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide"
-        onScroll={handleScroll}
+        className="max-w-md mx-auto space-y-6 overflow-y-auto"
       >
         {videos.map((video, index) => (
           <div
             key={video.id}
-            className="relative h-screen w-full snap-start flex items-center justify-center bg-gray-900"
+            className="relative w-full max-w-md mx-auto bg-card rounded-xl overflow-hidden shadow-lg"
+            style={{ aspectRatio: '9/16', maxHeight: '600px' }}
           >
             {/* Video Background */}
             {video.videoUrl ? (
-              <div>
+              <div className="relative w-full h-full">
                 <video
                   ref={el => videoRefs.current[index] = el}
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="w-full h-full object-cover rounded-xl"
                   autoPlay={index === currentVideoIndex}
                   loop
                   muted={isMuted}
@@ -361,9 +355,9 @@ const VideoFeed = () => {
                 </video>
               </div>
             ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900">
+              <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/20 rounded-xl">
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-white/50 text-6xl font-bold">
+                  <div className="text-muted-foreground text-6xl font-bold">
                     {index + 1}
                   </div>
                 </div>
@@ -371,7 +365,7 @@ const VideoFeed = () => {
             )}
 
             {/* Video Overlay */}
-            <div className="absolute inset-0 bg-black/20" />
+            <div className="absolute inset-0 bg-black/10 rounded-xl" />
 
             {/* Content Overlay */}
             <div className="absolute bottom-0 left-0 right-0 p-4 pb-24">
@@ -539,21 +533,6 @@ const VideoFeed = () => {
               </Button>
             </div>
           </div>
-        ))}
-      </div>
-
-      {/* Scroll Indicator */}
-      <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex flex-col space-y-1">
-        {videos.map((_, index) => (
-          <div
-            key={index}
-            className={cn(
-              "w-1 h-8 rounded-full transition-all duration-300",
-              index === currentVideoIndex 
-                ? "bg-white" 
-                : "bg-white/30"
-            )}
-          />
         ))}
       </div>
 
