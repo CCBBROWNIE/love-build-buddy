@@ -56,6 +56,7 @@ const Chat = () => {
 
 
   const callClaude = async (userMessage: string) => {
+    console.log("=== CHAT DEBUG START ===");
     console.log("Real AI function started with message:", userMessage);
     setIsTyping(true);
     
@@ -66,6 +67,7 @@ const Chat = () => {
       }));
 
       console.log("Previous messages:", conversationHistory);
+      console.log("About to call supabase.functions.invoke...");
 
       const { data, error } = await supabase.functions.invoke('chat-ai', {
         body: {
@@ -73,6 +75,8 @@ const Chat = () => {
           conversationHistory: conversationHistory
         }
       });
+
+      console.log("Supabase function response:", { data, error });
 
       if (error) {
         console.error('Supabase function error:', error);
@@ -82,6 +86,7 @@ const Chat = () => {
       const aiResponse = data?.response || "I'm sorry, I had trouble processing that. Could you try again?";
 
       console.log("Real AI responded with:", aiResponse);
+      console.log("=== CHAT DEBUG SUCCESS ===");
 
       const aiMessage: Message = {
         id: Date.now().toString(),
@@ -94,7 +99,13 @@ const Chat = () => {
       setIsTyping(false);
       
     } catch (error) {
+      console.error('=== CHAT DEBUG ERROR ===');
       console.error('Real AI error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
       
       // Fallback to smart simulation if API fails
       let aiResponse = "";
@@ -115,6 +126,7 @@ const Chat = () => {
 
       setMessages(prev => prev.filter(msg => !msg.typing).concat([aiMessage]));
       setIsTyping(false);
+      console.log("=== CHAT DEBUG FALLBACK USED ===");
     }
   };
 

@@ -13,14 +13,21 @@ serve(async (req) => {
   }
 
   try {
+    console.log("=== CHAT-AI FUNCTION DEBUG START ===");
     const { message, conversationHistory } = await req.json();
+    console.log("Received message:", message);
+    console.log("Conversation history:", conversationHistory);
     
     const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
+    console.log("API key exists:", !!apiKey);
+    console.log("API key length:", apiKey?.length || 0);
     
     if (!apiKey) {
+      console.error("ANTHROPIC_API_KEY not configured");
       throw new Error('ANTHROPIC_API_KEY not configured');
     }
 
+    console.log("About to call Anthropic API...");
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -64,14 +71,21 @@ Always respond as MeetCute with genuine enthusiasm for these human connection st
       }),
     });
 
+    console.log("Anthropic API response status:", response.status);
+    console.log("Anthropic API response ok:", response.ok);
+
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('Anthropic API error details:', errorText);
       console.error('Claude API error:', response.status, errorText);
-      throw new Error(`Claude API error: ${response.status}`);
+      throw new Error(`Claude API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log("Anthropic API response data:", data);
     const aiResponse = data.content[0]?.text || "I'm sorry, I had trouble processing that. Could you try again?";
+    console.log("Final AI response:", aiResponse);
+    console.log("=== CHAT-AI FUNCTION DEBUG SUCCESS ===");
 
     return new Response(
       JSON.stringify({ response: aiResponse }),
@@ -81,7 +95,13 @@ Always respond as MeetCute with genuine enthusiasm for these human connection st
       },
     );
   } catch (error) {
+    console.error('=== CHAT-AI FUNCTION DEBUG ERROR ===');
     console.error('Error in chat-ai function:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
