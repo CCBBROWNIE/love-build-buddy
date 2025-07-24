@@ -36,6 +36,12 @@ const Navigation = ({ className }: NavigationProps) => {
       gradient: "from-purple-500 to-pink-500"
     },
     {
+      path: "/profile",
+      icon: User,
+      label: "Profile",
+      gradient: "from-blue-500 to-purple-500"
+    },
+    {
       path: "/chat",
       icon: MessageCircle,
       label: "Chat",
