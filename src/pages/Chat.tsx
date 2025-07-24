@@ -69,7 +69,7 @@ const Chat = () => {
       console.log("Previous messages:", conversationHistory);
       console.log("About to call supabase.functions.invoke...");
 
-      const { data, error } = await supabase.functions.invoke('test-chat', {
+      const { data, error } = await supabase.functions.invoke('chat-ai', {
         body: {
           message: userMessage,
           conversationHistory: conversationHistory
@@ -83,7 +83,7 @@ const Chat = () => {
         throw new Error(`AI function error: ${error.message}`);
       }
 
-      const aiResponse = data?.response || "I'm sorry, I had trouble processing that. Could you try again?";
+      const aiResponse = data?.response || data?.error || "I'm sorry, I had trouble processing that. Could you try again?";
 
       console.log("Real AI responded with:", aiResponse);
       console.log("=== CHAT DEBUG SUCCESS ===");
