@@ -335,44 +335,67 @@ export default function Profile() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 {videos.map((video) => (
-                  <Card key={video.id} className="overflow-hidden">
-                    <CardContent className="p-0">
-                      <div className="relative aspect-[9/16] bg-gray-100">
-                        {video.thumbnail_url ? (
-                          <img 
-                            src={video.thumbnail_url} 
-                            alt={video.title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <video
-                            src={video.video_url}
-                            className="w-full h-full object-cover"
-                            muted
-                            preload="metadata"
-                          />
-                        )}
-                        <div className="absolute top-2 left-2">
-                          <Badge variant="secondary" className={getCategoryColor(video.category)}>
-                            {getCategoryText(video.category)}
-                          </Badge>
-                        </div>
-                        <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-2">
-                          <p className="text-white text-xs font-medium truncate">
-                            {video.title}
-                          </p>
-                          <div className="flex items-center text-white/70 text-xs mt-1">
-                            <Heart className="w-3 h-3 mr-1" />
-                            <span>{video.likes_count}</span>
-                            <MessageCircle className="w-3 h-3 ml-2 mr-1" />
-                            <span>{video.comments_count}</span>
+                  <div key={video.id} className="relative">
+                    <Card className="overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-200">
+                      <CardContent className="p-0">
+                        <div className="relative aspect-[9/16] bg-gray-100">
+                          {video.thumbnail_url ? (
+                            <img 
+                              src={video.thumbnail_url} 
+                              alt={video.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <video
+                              src={video.video_url}
+                              className="w-full h-full object-cover"
+                              muted
+                              preload="metadata"
+                              poster=""
+                            />
+                          )}
+                          
+                          {/* Play button overlay */}
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-12 h-12 bg-black/50 rounded-full flex items-center justify-center">
+                              <Video className="w-6 h-6 text-white" />
+                            </div>
+                          </div>
+                          
+                          {/* Category badge */}
+                          <div className="absolute top-2 left-2">
+                            <Badge variant="secondary" className={getCategoryColor(video.category)}>
+                              {getCategoryText(video.category)}
+                            </Badge>
+                          </div>
+                          
+                          {/* Video info overlay */}
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
+                            <p className="text-white text-sm font-medium truncate mb-1">
+                              {video.title}
+                            </p>
+                            <div className="flex items-center justify-between text-white/80 text-xs">
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center">
+                                  <Heart className="w-3 h-3 mr-1" />
+                                  <span>{video.likes_count || 0}</span>
+                                </div>
+                                <div className="flex items-center">
+                                  <MessageCircle className="w-3 h-3 mr-1" />
+                                  <span>{video.comments_count || 0}</span>
+                                </div>
+                              </div>
+                              <span className="text-xs">
+                                {new Date(video.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </div>
                 ))}
               </div>
             )}
