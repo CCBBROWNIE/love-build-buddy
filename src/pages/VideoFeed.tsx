@@ -367,8 +367,8 @@ const VideoFeed = () => {
             {/* Video Overlay */}
             <div className="absolute inset-0 bg-black/10 rounded-xl" />
 
-            {/* Content Overlay - Bottom Left */}
-            <div className="absolute bottom-0 left-0 p-4 pb-24">
+            {/* Content Overlay - Bottom Left Corner */}
+            <div className="absolute bottom-4 left-4">
               <div className="flex flex-col">
                 {/* Profile Picture and Username - Top */}
                 <div className="flex items-center mb-2">
