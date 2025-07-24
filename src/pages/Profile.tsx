@@ -5,6 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -52,7 +53,6 @@ export default function Profile() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [videos, setVideos] = useState<UserVideo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [bio, setBio] = useState('');
   const [totalLikes, setTotalLikes] = useState(0);
@@ -127,7 +127,7 @@ export default function Profile() {
     }
   };
 
-  const handleSaveBio = async () => {
+  const handleSaveProfile = async () => {
     if (!user || !profile) return;
 
     try {
@@ -139,16 +139,16 @@ export default function Profile() {
       if (error) throw error;
 
       setProfile({ ...profile, bio });
-      setIsEditing(false);
+      setIsEditingProfile(false);
       toast({
-        title: "Bio updated!",
-        description: "Your bio has been updated successfully.",
+        title: "Profile updated!",
+        description: "Your profile has been updated successfully.",
       });
     } catch (error) {
-      console.error('Error updating bio:', error);
+      console.error('Error updating profile:', error);
       toast({
         title: "Error",
-        description: "Failed to update bio. Please try again.",
+        description: "Failed to update profile. Please try again.",
         variant: "destructive",
       });
     }
@@ -255,48 +255,11 @@ export default function Profile() {
 
               {/* Bio Section */}
               <div className="w-full">
-                {isEditing ? (
-                  <div className="space-y-3">
-                    <textarea
-                      value={bio}
-                      onChange={(e) => setBio(e.target.value)}
-                      placeholder="Tell us about yourself..."
-                      className="w-full p-3 border border-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
-                      rows={3}
-                      maxLength={150}
-                    />
-                    <div className="flex gap-2">
-                      <Button onClick={handleSaveBio} size="sm">
-                        Save Bio
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          setIsEditing(false);
-                          setBio(profile.bio || '');
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">
-                      {profile.bio || "No bio added yet."}
-                    </p>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => setIsEditing(true)}
-                      className="text-primary"
-                    >
-                      <Edit3 className="w-4 h-4 mr-2" />
-                      {profile.bio ? 'Edit Bio' : 'Add Bio'}
-                    </Button>
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    {profile.bio || "No bio added yet."}
+                  </p>
+                </div>
               </div>
 
               {/* Edit Profile Button */}
@@ -312,10 +275,41 @@ export default function Profile() {
                     <DialogTitle>Edit Profile</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-6">
+                    {/* Profile Photo Upload */}
                     <ProfilePhotoUpload
                       onPhotoUploaded={handlePhotoUploaded}
                       currentPhotoUrl={profile.profile_photo_url}
                     />
+                    
+                    {/* Bio Edit */}
+                    <div className="space-y-3">
+                      <label className="text-sm font-medium">Bio</label>
+                      <Textarea
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
+                        placeholder="Tell us about yourself..."
+                        className="resize-none"
+                        rows={3}
+                        maxLength={150}
+                      />
+                      <p className="text-xs text-muted-foreground">{bio.length}/150 characters</p>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Button onClick={handleSaveProfile} className="flex-1">
+                        Save Changes
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setIsEditingProfile(false);
+                          setBio(profile.bio || '');
+                        }}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
