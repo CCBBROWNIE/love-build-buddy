@@ -367,141 +367,140 @@ const VideoFeed = () => {
             {/* Video Overlay */}
             <div className="absolute inset-0 bg-black/10 rounded-xl" />
 
-            {/* Content Overlay - Bottom */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 pb-24">
-              <div className="flex justify-between items-end">
-                {/* Left Side - Video Info Stacked from bottom up */}
-                <div className="flex flex-col justify-end">
-                  {/* Description - Top of stack */}
-                  <p className="text-white/90 text-sm leading-relaxed mb-2 max-w-xs">
-                    {video.description}
-                  </p>
-                  
-                  {/* Caption/Title - Middle of stack */}
-                  <h3 className="text-white text-base font-bold mb-2 leading-tight">
-                    {video.title}
-                  </h3>
-                  
-                  {/* Profile Picture and Username - Bottom of stack */}
-                  <div className="flex items-center">
-                    <Avatar className="w-8 h-8 mr-2">
-                      <AvatarImage 
-                        src={video.profilePhotoUrl || undefined} 
-                        className="object-cover w-full h-full"
-                      />
-                      <AvatarFallback className="bg-white/20">
-                        <User className="w-4 h-4 text-white" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <button
-                      onClick={() => {
-                        setSelectedUserId(video.userId);
-                        setSelectedUsername(video.username);
-                      }}
-                      className="text-white font-semibold hover:text-white/80 transition-colors"
-                    >
-                      {video.username}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Right Side - Actions */}
-                <div className="flex flex-col items-center space-y-6">
-                  {/* Like Button */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleLike(video.id)}
-                    className="flex flex-col items-center p-2 hover:bg-white/10 rounded-full"
-                  >
-                    <Heart
-                      className={cn(
-                        "w-7 h-7 mb-1",
-                        video.isLiked ? "text-red-500 fill-red-500" : "text-white"
-                      )}
+            {/* Content Overlay - Bottom Left */}
+            <div className="absolute bottom-0 left-0 p-4 pb-24">
+              <div className="flex flex-col">
+                {/* Profile Picture and Username - Top */}
+                <div className="flex items-center mb-2">
+                  <Avatar className="w-8 h-8 mr-2">
+                    <AvatarImage 
+                      src={video.profilePhotoUrl || undefined} 
+                      className="object-cover w-full h-full"
                     />
-                    <span className="text-white text-xs font-medium">
-                      {formatCount(video.likes)}
-                    </span>
-                  </Button>
-
-                  {/* Comment Button */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setCommentsOpen(video.id)}
-                    className="flex flex-col items-center p-2 hover:bg-white/10 rounded-full"
+                    <AvatarFallback className="bg-white/20">
+                      <User className="w-4 h-4 text-white" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <button
+                    onClick={() => {
+                      setSelectedUserId(video.userId);
+                      setSelectedUsername(video.username);
+                    }}
+                    className="text-white font-semibold hover:text-white/80 transition-colors"
                   >
-                    <MessageCircle className="w-7 h-7 text-white mb-1" />
-                    <span className="text-white text-xs font-medium">
-                      {formatCount(video.comments)}
-                    </span>
-                  </Button>
-
-                  {/* Share Button */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleShare(video)}
-                    className="flex flex-col items-center p-2 hover:bg-white/10 rounded-full"
-                  >
-                    <Share className="w-7 h-7 text-white mb-1" />
-                    <span className="text-white text-xs font-medium">
-                      {formatCount(video.shares)}
-                    </span>
-                  </Button>
-
-                  {/* Repost Button */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleRepost(video.id)}
-                    className="flex flex-col items-center p-2 hover:bg-white/10 rounded-full"
-                  >
-                    <Repeat2 className="w-7 h-7 text-white mb-1" />
-                    <span className="text-white text-xs font-medium">
-                      Repost
-                    </span>
-                  </Button>
-
-                  {/* More Options */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex flex-col items-center p-2 hover:bg-white/10 rounded-full"
-                      >
-                        <MoreHorizontal className="w-7 h-7 text-white" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-background border border-border">
-                      <DropdownMenuItem
-                        onClick={() => handleShare(video)}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <Copy className="w-4 h-4" />
-                        Copy Link
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => window.open(video.videoUrl, '_blank')}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <Download className="w-4 h-4" />
-                        Download
-                      </DropdownMenuItem>
-                      {user && video.userId === user.id && (
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteVideo(video.id)}
-                          className="text-destructive flex items-center gap-2 cursor-pointer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Delete Video
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    {video.username}
+                  </button>
                 </div>
+                
+                {/* Caption/Title - Middle */}
+                <h3 className="text-white text-base font-bold mb-2 leading-tight max-w-xs">
+                  {video.title}
+                </h3>
+                
+                {/* Description - Bottom */}
+                <p className="text-white/90 text-sm leading-relaxed max-w-xs">
+                  {video.description}
+                </p>
+              </div>
+            </div>
+
+            {/* Right Side - Actions */}
+            <div className="absolute bottom-0 right-4 pb-24">
+              <div className="flex flex-col items-center space-y-6">
+                {/* Like Button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleLike(video.id)}
+                  className="flex flex-col items-center p-2 hover:bg-white/10 rounded-full"
+                >
+                  <Heart
+                    className={cn(
+                      "w-7 h-7 mb-1",
+                      video.isLiked ? "text-red-500 fill-red-500" : "text-white"
+                    )}
+                  />
+                  <span className="text-white text-xs font-medium">
+                    {formatCount(video.likes)}
+                  </span>
+                </Button>
+
+                {/* Comment Button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCommentsOpen(video.id)}
+                  className="flex flex-col items-center p-2 hover:bg-white/10 rounded-full"
+                >
+                  <MessageCircle className="w-7 h-7 text-white mb-1" />
+                  <span className="text-white text-xs font-medium">
+                    {formatCount(video.comments)}
+                  </span>
+                </Button>
+
+                {/* Share Button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleShare(video)}
+                  className="flex flex-col items-center p-2 hover:bg-white/10 rounded-full"
+                >
+                  <Share className="w-7 h-7 text-white mb-1" />
+                  <span className="text-white text-xs font-medium">
+                    {formatCount(video.shares)}
+                  </span>
+                </Button>
+
+                {/* Repost Button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleRepost(video.id)}
+                  className="flex flex-col items-center p-2 hover:bg-white/10 rounded-full"
+                >
+                  <Repeat2 className="w-7 h-7 text-white mb-1" />
+                  <span className="text-white text-xs font-medium">
+                    Repost
+                  </span>
+                </Button>
+
+                {/* More Options */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex flex-col items-center p-2 hover:bg-white/10 rounded-full"
+                    >
+                      <MoreHorizontal className="w-7 h-7 text-white" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-background border border-border">
+                    <DropdownMenuItem
+                      onClick={() => handleShare(video)}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <Copy className="w-4 h-4" />
+                      Copy Link
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => window.open(video.videoUrl, '_blank')}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download
+                    </DropdownMenuItem>
+                    {user && video.userId === user.id && (
+                      <DropdownMenuItem
+                        onClick={() => handleDeleteVideo(video.id)}
+                        className="text-destructive flex items-center gap-2 cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete Video
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
 
