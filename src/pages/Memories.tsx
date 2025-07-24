@@ -212,6 +212,14 @@ const Memories = () => {
                 <MemoryCard key={memory.id} memory={memory} />
               ))}
             </div>
+          ) : memories.length === 0 ? (
+            <div className="text-center py-12">
+              <Sparkles className="w-16 h-16 text-muted-foreground mx-auto mb-6" />
+              <h2 className="text-xl font-bold mb-2">No memories waiting</h2>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Chat with MeetCute.ai to create your first memory to start connecting.
+              </p>
+            </div>
           ) : (
             <Card className="text-center py-8">
               <CardContent>
@@ -224,17 +232,6 @@ const Memories = () => {
             </Card>
           )}
         </div>
-
-        {/* Empty State for All */}
-        {memories.length === 0 && (
-          <div className="text-center py-12">
-            <Sparkles className="w-16 h-16 text-muted-foreground mx-auto mb-6" />
-            <h2 className="text-xl font-bold mb-2">No memories waiting</h2>
-            <p className="text-muted-foreground max-w-md mx-auto">
-              Chat with MeetCute.ai to create your first memory to start connecting.
-            </p>
-          </div>
-        )}
       </div>
 
     </div>
