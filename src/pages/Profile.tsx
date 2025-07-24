@@ -17,10 +17,7 @@ import {
   Mail,
   Video,
   Heart,
-  MessageCircle,
-  Users,
-  UserPlus,
-  Camera
+  MessageCircle
 } from 'lucide-react';
 
 interface Profile {
@@ -56,8 +53,6 @@ export default function Profile() {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [bio, setBio] = useState('');
   const [totalLikes, setTotalLikes] = useState(0);
-  const [followers, setFollowers] = useState(0);
-  const [following, setFollowing] = useState(0);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -110,10 +105,6 @@ export default function Profile() {
       // Calculate total likes
       const totalVideoLikes = data?.reduce((sum, video) => sum + (video.likes_count || 0), 0) || 0;
       setTotalLikes(totalVideoLikes);
-      
-      // Mock data for followers/following - you can replace with real data later
-      setFollowers(42);
-      setFollowing(23);
     } catch (error) {
       console.error('Error fetching user videos:', error);
     } finally {
@@ -228,30 +219,23 @@ export default function Profile() {
                 <span>Joined {new Date(profile.created_at).toLocaleDateString()}</span>
               </div>
 
-              {/* Social Stats */}
-              <div className="flex justify-center gap-6 mb-6">
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    <Users className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-bold">{followers}</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">Followers</span>
-                </div>
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    <UserPlus className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-bold">{following}</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">Following</span>
-                </div>
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    <Heart className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-bold">{totalLikes}</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">Likes</span>
-                </div>
-              </div>
+               {/* Social Stats */}
+               <div className="flex justify-center gap-6 mb-6">
+                 <div className="text-center">
+                   <div className="flex items-center justify-center gap-1">
+                     <Heart className="w-4 h-4 text-muted-foreground" />
+                     <span className="font-bold">{totalLikes}</span>
+                   </div>
+                   <span className="text-xs text-muted-foreground">Total Likes</span>
+                 </div>
+                 <div className="text-center">
+                   <div className="flex items-center justify-center gap-1">
+                     <Video className="w-4 h-4 text-muted-foreground" />
+                     <span className="font-bold">{videos.length}</span>
+                   </div>
+                   <span className="text-xs text-muted-foreground">Videos</span>
+                 </div>
+               </div>
 
               {/* Bio Section */}
               <div className="w-full">
