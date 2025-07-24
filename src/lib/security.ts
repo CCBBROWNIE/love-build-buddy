@@ -111,11 +111,104 @@ export const createRateLimiter = (maxAttempts: number, windowMs: number) => {
   };
 };
 
-// Security headers for responses
+// Content Security Policy for enhanced protection
+export const getContentSecurityPolicy = (nonce?: string): string => {
+  const nonceStr = nonce ? ` 'nonce-${nonce}'` : '';
+  
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'unsafe-inline'${nonceStr} https://esm.sh https://cdn.jsdelivr.net`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "img-src 'self' data: https: blob:",
+    "media-src 'self' blob:",
+    "connect-src 'self' https://gqmzhldfcotgxvwlmjxp.supabase.co https://api.anthropic.com",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "upgrade-insecure-requests"
+  ].join('; ');
+};
+
+// Enhanced security headers for responses
 export const securityHeaders = {
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
   'X-XSS-Protection': '1; mode=block',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';",
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
+  'Content-Security-Policy': getContentSecurityPolicy(),
+};
+
+// Generate cryptographically secure nonce
+export const generateNonce = (): string => {
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return btoa(String.fromCharCode(...array));
+};
+
+// Enhanced session validation
+export const validateSession = (sessionData: any): boolean => {
+  if (!sessionData || typeof sessionData !== 'object') return false;
+  
+  const { access_token, expires_at, user } = sessionData;
+  
+  if (!access_token || !expires_at || !user) return false;
+  
+  // Check if session is expired
+  const expiryTime = new Date(expires_at * 1000);
+  if (expiryTime <= new Date()) return false;
+  
+  // Validate user object structure
+  if (!user.id || !user.email) return false;
+  
+  return true;
+};
+
+// Secure URL validation
+export const isValidURL = (url: string, allowedDomains?: string[]): boolean => {
+  try {
+    const urlObj = new URL(url);
+    
+    // Only allow HTTPS (except localhost for development)
+    if (urlObj.protocol !== 'https:' && 
+        !urlObj.hostname.includes('localhost') && 
+        urlObj.hostname !== '127.0.0.1') {
+      return false;
+    }
+    
+    // Check allowed domains if specified
+    if (allowedDomains && !allowedDomains.includes(urlObj.hostname)) {
+      return false;
+    }
+    
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// Audit trail logging
+export const logAuditEvent = (
+  eventType: string, 
+  userId: string | null, 
+  details: Record<string, any> = {}
+): void => {
+  const auditLog = {
+    timestamp: new Date().toISOString(),
+    eventType,
+    userId,
+    userAgent: navigator.userAgent,
+    url: window.location.href,
+    ...details
+  };
+  
+  // Log to console in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Audit Event:', auditLog);
+  }
+  
+  // In production, this could be sent to an audit logging service
+  // fetch('/api/audit-log', { method: 'POST', body: JSON.stringify(auditLog) });
 };

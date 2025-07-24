@@ -5,7 +5,79 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY', 
+  'X-XSS-Protection': '1; mode=block',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';",
 };
+
+// Get client IP address from request headers
+function getClientIP(req: Request): string {
+  const forwarded = req.headers.get('x-forwarded-for');
+  const realIP = req.headers.get('x-real-ip');
+  const cfIP = req.headers.get('cf-connecting-ip');
+  
+  return cfIP || realIP || forwarded?.split(',')[0]?.trim() || 'unknown';
+}
+
+// Validate UUID format
+function isValidUUID(uuid: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+}
+
+// Sanitize text content
+function sanitizeText(text: string): string {
+  return text.replace(/<[^>]*>/g, '').trim().substring(0, 5000);
+}
+
+// Log security event
+async function logSecurityEvent(
+  supabase: any,
+  eventType: string,
+  userId: string | null,
+  ipAddress: string,
+  userAgent: string | null,
+  metadata: Record<string, any>,
+  severity: string = 'medium'
+): Promise<void> {
+  try {
+    await supabase.rpc('log_security_event', {
+      p_event_type: eventType,
+      p_user_id: userId,
+      p_ip_address: ipAddress,
+      p_user_agent: userAgent,
+      p_metadata: metadata,
+      p_severity: severity,
+      p_source: 'edge_function'
+    });
+  } catch (error) {
+    console.error('Failed to log security event:', error);
+  }
+}
+
+// Check rate limiting
+async function checkRateLimit(supabase: any, identifier: string, actionType: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.rpc('check_rate_limit', {
+      p_identifier: identifier,
+      p_action_type: actionType,
+      p_max_attempts: 10, // Higher limit for memory processing
+      p_window_minutes: 60
+    });
+
+    if (error) {
+      console.error('Rate limit check error:', error);
+      return false;
+    }
+
+    return data === true;
+  } catch (error) {
+    console.error('Rate limit check exception:', error);
+    return false;
+  }
+}
 
 interface MemoryDetails {
   location?: string;
@@ -18,24 +90,160 @@ interface MemoryDetails {
 }
 
 serve(async (req) => {
+  const startTime = Date.now();
+  const clientIP = getClientIP(req);
+  const userAgent = req.headers.get('user-agent') || 'unknown';
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
-    const { conversation, userId } = await req.json();
+  // Initialize Supabase client first for logging
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  // Only allow POST requests
+  if (req.method !== 'POST') {
+    await logSecurityEvent(
+      supabase,
+      'invalid_method_memory_processor',
+      null,
+      clientIP,
+      userAgent,
+      { method: req.method },
+      'medium'
+    );
     
+    return new Response(
+      JSON.stringify({ error: 'Method not allowed', success: false }),
+      {
+        status: 405,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+
+  let conversation: string;
+  let userId: string;
+
+  try {
+    // Validate content type
+    const contentType = req.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error('Invalid content type');
+    }
+
+    // Parse and validate request body
+    const body = await req.json();
+    
+    if (!body || typeof body !== 'object') {
+      throw new Error('Invalid request body');
+    }
+
+    ({ conversation, userId } = body);
+    
+    // Input validation
     if (!conversation || !userId) {
       throw new Error('Missing conversation or userId');
     }
 
+    if (typeof conversation !== 'string' || typeof userId !== 'string') {
+      throw new Error('Conversation and userId must be strings');
+    }
+
+    // Validate userId format
+    if (!isValidUUID(userId)) {
+      await logSecurityEvent(
+        supabase,
+        'invalid_user_id_format',
+        null,
+        clientIP,
+        userAgent,
+        { userId },
+        'high'
+      );
+      throw new Error('Invalid user ID format');
+    }
+
+    // Sanitize conversation text
+    conversation = sanitizeText(conversation);
+    
+    if (conversation.length < 50) {
+      throw new Error('Conversation too short for processing');
+    }
+
+    // Check rate limiting by user
+    const userAllowed = await checkRateLimit(supabase, userId, 'memory_processing');
+    if (!userAllowed) {
+      await logSecurityEvent(
+        supabase,
+        'rate_limit_exceeded_memory',
+        userId,
+        clientIP,
+        userAgent,
+        { limitType: 'user' },
+        'high'
+      );
+      
+      return new Response(
+        JSON.stringify({ 
+          error: 'Rate limit exceeded. Please try again later.',
+          success: false 
+        }),
+        {
+          status: 429,
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'Retry-After': '3600'
+          },
+        }
+      );
+    }
+
+    // Check rate limiting by IP
+    const ipAllowed = await checkRateLimit(supabase, clientIP, 'memory_processing_ip');
+    if (!ipAllowed) {
+      await logSecurityEvent(
+        supabase,
+        'rate_limit_exceeded_memory',
+        userId,
+        clientIP,
+        userAgent,
+        { limitType: 'ip' },
+        'high'
+      );
+      
+      return new Response(
+        JSON.stringify({ 
+          error: 'Rate limit exceeded. Please try again later.',
+          success: false 
+        }),
+        {
+          status: 429,
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'Retry-After': '3600'
+          },
+        }
+      );
+    }
+
     console.log('Processing memory for user:', userId);
 
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Log memory processing start
+    await logSecurityEvent(
+      supabase,
+      'memory_processing_started',
+      userId,
+      clientIP,
+      userAgent,
+      { conversationLength: conversation.length },
+      'low'
+    );
 
     // Extract memory details using Claude API
     const extractionPrompt = `
@@ -219,6 +427,21 @@ serve(async (req) => {
 
     console.log(`Created ${potentialMatches.length} potential matches`);
 
+    // Log successful processing
+    await logSecurityEvent(
+      supabase,
+      'memory_processing_completed',
+      userId,
+      clientIP,
+      userAgent,
+      { 
+        memoryId: newMemory.id,
+        potentialMatches: potentialMatches.length,
+        processingTime: Date.now() - startTime
+      },
+      'low'
+    );
+
     return new Response(JSON.stringify({
       success: true,
       memory_id: newMemory.id,
@@ -230,12 +453,34 @@ serve(async (req) => {
     });
 
   } catch (error) {
+    // Log security event for errors
+    await logSecurityEvent(
+      supabase,
+      'memory_processing_error',
+      userId || null,
+      clientIP,
+      userAgent,
+      { 
+        error: error.message,
+        processingTime: Date.now() - startTime,
+        conversationLength: conversation?.length || 0
+      },
+      'medium'
+    );
+
     console.error('Error in memory-processor function:', error);
+    
+    // Don't expose internal error details
+    const isValidationError = error.message.includes('Invalid') || 
+                              error.message.includes('Missing') ||
+                              error.message.includes('too short') ||
+                              error.message.includes('format');
+    
     return new Response(JSON.stringify({ 
       success: false,
-      error: error.message 
+      error: isValidationError ? error.message : 'Failed to process memory'
     }), {
-      status: 500,
+      status: isValidationError ? 400 : 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

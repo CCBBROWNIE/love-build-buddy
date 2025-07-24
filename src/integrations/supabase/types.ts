@@ -290,6 +290,39 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          action_type: string
+          attempt_count: number
+          blocked_until: string | null
+          created_at: string
+          id: string
+          identifier: string
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          action_type: string
+          attempt_count?: number
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          identifier: string
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          action_type?: string
+          attempt_count?: number
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          identifier?: string
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       security_events: {
         Row: {
           created_at: string
@@ -297,6 +330,11 @@ export type Database = {
           id: string
           ip_address: unknown | null
           metadata: Json | null
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string | null
+          source: string | null
           user_agent: string | null
           user_id: string | null
         }
@@ -306,6 +344,11 @@ export type Database = {
           id?: string
           ip_address?: unknown | null
           metadata?: Json | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          source?: string | null
           user_agent?: string | null
           user_id?: string | null
         }
@@ -315,6 +358,11 @@ export type Database = {
           id?: string
           ip_address?: unknown | null
           metadata?: Json | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          source?: string | null
           user_agent?: string | null
           user_id?: string | null
         }
@@ -405,9 +453,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_rate_limit: {
+        Args: {
+          p_identifier: string
+          p_action_type: string
+          p_max_attempts?: number
+          p_window_minutes?: number
+        }
+        Returns: boolean
+      }
       cleanup_expired_verifications: {
         Args: Record<PropertyKey, never>
-        Returns: undefined
+        Returns: number
+      }
+      cleanup_old_security_events: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       get_follower_count: {
         Args: { user_id: string }
@@ -420,6 +481,18 @@ export type Database = {
       is_following: {
         Args: { follower_user_id: string; following_user_id: string }
         Returns: boolean
+      }
+      log_security_event: {
+        Args: {
+          p_event_type: string
+          p_user_id?: string
+          p_ip_address?: unknown
+          p_user_agent?: string
+          p_metadata?: Json
+          p_severity?: string
+          p_source?: string
+        }
+        Returns: string
       }
     }
     Enums: {

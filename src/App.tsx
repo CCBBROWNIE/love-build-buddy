@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import Navigation from "./components/Navigation";
 import { AuthProvider } from "./hooks/useAuth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { SecurityProvider } from "./components/SecurityProvider";
 
 const queryClient = new QueryClient();
 
@@ -51,7 +52,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <AppContent />
+          <SecurityProvider>
+            <AppContent />
+          </SecurityProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
