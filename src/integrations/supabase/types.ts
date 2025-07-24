@@ -108,13 +108,77 @@ export type Database = {
         }
         Relationships: []
       }
+      matches: {
+        Row: {
+          confidence_score: number
+          created_at: string
+          id: string
+          match_reason: string | null
+          memory1_id: string
+          memory2_id: string
+          status: string
+          updated_at: string
+          user1_confirmed: boolean | null
+          user1_id: string
+          user2_confirmed: boolean | null
+          user2_id: string
+        }
+        Insert: {
+          confidence_score?: number
+          created_at?: string
+          id?: string
+          match_reason?: string | null
+          memory1_id: string
+          memory2_id: string
+          status?: string
+          updated_at?: string
+          user1_confirmed?: boolean | null
+          user1_id: string
+          user2_confirmed?: boolean | null
+          user2_id: string
+        }
+        Update: {
+          confidence_score?: number
+          created_at?: string
+          id?: string
+          match_reason?: string | null
+          memory1_id?: string
+          memory2_id?: string
+          status?: string
+          updated_at?: string
+          user1_confirmed?: boolean | null
+          user1_id?: string
+          user2_confirmed?: boolean | null
+          user2_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matches_memory1_id_fkey"
+            columns: ["memory1_id"]
+            isOneToOne: false
+            referencedRelation: "memories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_memory2_id_fkey"
+            columns: ["memory2_id"]
+            isOneToOne: false
+            referencedRelation: "memories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memories: {
         Row: {
           created_at: string
           description: string
+          extracted_details: Json | null
+          extracted_location: string | null
+          extracted_time_period: string | null
           id: string
           location: string | null
           match_id: string | null
+          processed: boolean | null
           status: string | null
           timestamp: string
           updated_at: string
@@ -123,9 +187,13 @@ export type Database = {
         Insert: {
           created_at?: string
           description: string
+          extracted_details?: Json | null
+          extracted_location?: string | null
+          extracted_time_period?: string | null
           id?: string
           location?: string | null
           match_id?: string | null
+          processed?: boolean | null
           status?: string | null
           timestamp: string
           updated_at?: string
@@ -134,9 +202,13 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string
+          extracted_details?: Json | null
+          extracted_location?: string | null
+          extracted_time_period?: string | null
           id?: string
           location?: string | null
           match_id?: string | null
+          processed?: boolean | null
           status?: string | null
           timestamp?: string
           updated_at?: string
