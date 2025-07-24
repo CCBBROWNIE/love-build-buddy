@@ -52,6 +52,12 @@ const Navigation = ({ className }: NavigationProps) => {
       icon: Heart,
       label: "Memories",
       gradient: "from-coral to-coral-light"
+    },
+    {
+      path: "/matches",
+      icon: Sparkles,
+      label: "Matches",
+      gradient: "from-spark to-yellow-400"
     }
   ];
 

@@ -9,6 +9,7 @@ import ProfileSetup from "./pages/ProfileSetup";
 import Permissions from "./pages/Permissions";
 import Chat from "./pages/Chat";
 import Memories from "./pages/Memories";
+import Matches from "./pages/Matches";
 import Profile from "./pages/Profile";
 import VideoFeed from "./pages/VideoFeed";
 import NotFound from "./pages/NotFound";
@@ -33,6 +34,7 @@ const AppContent = () => {
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
         <Route path="/memories" element={<ProtectedRoute><Memories /></ProtectedRoute>} />
+        <Route path="/matches" element={<ProtectedRoute><Matches /></ProtectedRoute>} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
