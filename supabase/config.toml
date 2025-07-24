@@ -23,6 +23,9 @@ port = 54322
 [edge_functions.chat-ai]
 verify_jwt = false
 
+[edge_functions.test-chat]
+verify_jwt = false
+
 [edge_functions.send-verification]
 verify_jwt = false
 
