@@ -184,7 +184,7 @@ const Chat = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-subtle flex flex-col pb-20">
+    <div className="h-screen bg-gradient-subtle flex flex-col relative">
       {/* Header */}
       <div className="glass border-b backdrop-blur-lg p-4 sticky top-0 z-40">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -305,7 +305,7 @@ const Chat = () => {
           </div>
 
           {/* AI Input */}
-          <div className="px-4 py-3 border-t border-border/50 glass backdrop-blur-lg">
+          <div className="absolute bottom-20 left-0 right-0 px-4 py-3 border-t border-border/50 glass backdrop-blur-lg">
             <div className="max-w-4xl mx-auto">
               <div className="flex items-center space-x-3">
                 <Button
