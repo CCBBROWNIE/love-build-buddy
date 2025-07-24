@@ -14,6 +14,7 @@ interface EmailVerificationProps {
 }
 
 const EmailVerification = ({ email, onBack, onVerified }: EmailVerificationProps) => {
+  const { verifyEmail } = useAuth();
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [isVerifying, setIsVerifying] = useState(false);
   const [canResend, setCanResend] = useState(false);
@@ -62,8 +63,8 @@ const EmailVerification = ({ email, onBack, onVerified }: EmailVerificationProps
   const handleVerify = async (verificationCode: string) => {
     setIsVerifying(true);
     
-    const { verifyEmail } = useAuth();
     const { error } = await verifyEmail(email, verificationCode);
+    
     
     setIsVerifying(false);
     

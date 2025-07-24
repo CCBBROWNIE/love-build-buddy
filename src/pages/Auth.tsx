@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, Mail, Lock, User, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { PasswordStrengthIndicator } from "@/components/PasswordStrengthIndicator";
+import EmailVerification from "@/components/EmailVerification";
 import { passwordSchema, emailSchema } from "@/lib/security";
 import { toast } from "sonner";
 
@@ -15,6 +16,7 @@ const Auth = () => {
   const { signIn, signUp } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [formData, setFormData] = useState({
@@ -86,8 +88,7 @@ const Auth = () => {
         if (error) {
           toast.error(error.message);
         } else {
-          toast.success("Account created successfully! Please check your email for verification.");
-          // Don't navigate immediately - wait for email verification
+          setShowEmailVerification(true);
         }
       }
     } catch (error) {
@@ -96,6 +97,26 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
+  const handleBackToSignup = () => {
+    setShowEmailVerification(false);
+  };
+
+  const handleEmailVerified = () => {
+    toast.success("Email verified successfully! Welcome to MeetCute!");
+    navigate("/profile-setup");
+  };
+
+  // Show email verification component if signup was successful
+  if (showEmailVerification) {
+    return (
+      <EmailVerification
+        email={formData.email}
+        onBack={handleBackToSignup}
+        onVerified={handleEmailVerified}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
