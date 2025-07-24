@@ -1,24 +1,30 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { message, conversationHistory } = await req.json()
+    const { message, conversationHistory } = await req.json();
     
-    const apiKey = Deno.env.get('CLAUDE_API_KEY') || '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'
+    const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
+    
+    if (!apiKey) {
+      throw new Error('ANTHROPIC_API_KEY not configured');
+    }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'x-api-key': apiKey,
+        'X-API-Key': apiKey,
         'Content-Type': 'application/json',
         'anthropic-version': '2023-06-01'
       },
@@ -36,10 +42,16 @@ Your personality:
 
 Your role:
 - Help users describe their "missed connection" memories in detail
-- Store these memories to potentially match with others who experienced the same moment
 - Ask for specific details: time, place, what the person looked like, what happened
 - Respond enthusiastically when someone shares a detailed memory
 - Make users feel like their story matters
+- When they provide good details, suggest they save their memory to find potential matches
+
+Key conversation flow:
+1. Listen to their story with enthusiasm
+2. Ask clarifying questions for more details
+3. Once they have a detailed memory, suggest: "This sounds like a perfect memory to save! Would you like me to help you store this so we can look for potential matches?"
+4. If they agree, tell them to go to the Memories page to submit their detailed story
 
 Always respond as MeetCute with genuine enthusiasm for these human connection stories.`,
         messages: [
@@ -50,14 +62,16 @@ Always respond as MeetCute with genuine enthusiasm for these human connection st
           }
         ]
       }),
-    })
+    });
 
     if (!response.ok) {
-      throw new Error(`Claude API error: ${response.status}`)
+      const errorText = await response.text();
+      console.error('Claude API error:', response.status, errorText);
+      throw new Error(`Claude API error: ${response.status}`);
     }
 
-    const data = await response.json()
-    const aiResponse = data.content[0]?.text || "I'm sorry, I had trouble processing that. Could you try again?"
+    const data = await response.json();
+    const aiResponse = data.content[0]?.text || "I'm sorry, I had trouble processing that. Could you try again?";
 
     return new Response(
       JSON.stringify({ response: aiResponse }),
@@ -65,15 +79,15 @@ Always respond as MeetCute with genuine enthusiasm for these human connection st
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       },
-    )
+    );
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error in chat-ai function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
       },
-    )
+    );
   }
-})
+});
