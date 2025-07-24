@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { 
   Heart, 
   MessageCircle, 
@@ -18,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { VideoUpload } from "@/components/VideoUpload";
 import { VideoComments } from "@/components/VideoComments";
+import { UserProfile } from "@/components/UserProfile";
 import { useToast } from "@/hooks/use-toast";
 import { 
   DropdownMenu,
@@ -28,7 +30,9 @@ import {
 
 interface VideoPost {
   id: string;
+  userId: string;
   username: string;
+  profilePhotoUrl?: string;
   title: string;
   description: string;
   videoUrl: string;
@@ -37,7 +41,7 @@ interface VideoPost {
   comments: number;
   shares: number;
   isLiked: boolean;
-  category: "love-story" | "dating-advice" | "relationship-tips" | "ad";
+  category: "memory" | "user-content" | "ad";
 }
 
 
@@ -49,6 +53,8 @@ const VideoFeed = () => {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [commentsOpen, setCommentsOpen] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUsername, setSelectedUsername] = useState<string>('');
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -73,7 +79,7 @@ const VideoFeed = () => {
       // Fetch profiles for those users
       const { data: profilesData } = await supabase
         .from('profiles')
-        .select('user_id, first_name, last_name')
+        .select('user_id, first_name, last_name, profile_photo_url')
         .in('user_id', userIds);
 
       const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
@@ -84,7 +90,9 @@ const VideoFeed = () => {
         
         return {
           id: video.id,
+          userId: video.user_id,
           username,
+          profilePhotoUrl: profile?.profile_photo_url,
           title: video.title,
           description: video.description || '',
           videoUrl: video.video_url,
@@ -93,7 +101,7 @@ const VideoFeed = () => {
           comments: video.comments_count || 0,
           shares: video.shares_count || 0,
           isLiked: false, // We'll check this separately
-          category: video.category as VideoPost['category'] || 'love-story'
+          category: video.category as VideoPost['category'] || 'user-content'
         };
       });
 
@@ -270,19 +278,19 @@ const VideoFeed = () => {
 
   const getCategoryColor = (category: VideoPost['category']) => {
     switch (category) {
-      case "love-story": return "bg-pink-500";
-      case "dating-advice": return "bg-blue-500";
-      case "relationship-tips": return "bg-purple-500";
+      case "memory": return "bg-purple-500";
+      case "user-content": return "bg-blue-500";
       case "ad": return "bg-yellow-500";
+      default: return "bg-gray-500";
     }
   };
 
   const getCategoryText = (category: VideoPost['category']) => {
     switch (category) {
-      case "love-story": return "Love Story";
-      case "dating-advice": return "Dating Advice";
-      case "relationship-tips": return "Tips";
+      case "memory": return "Memory";
+      case "user-content": return "Content";
       case "ad": return "Sponsored";
+      default: return "Video";
     }
   };
 
@@ -340,12 +348,23 @@ const VideoFeed = () => {
                     {getCategoryText(video.category)}
                   </div>
 
-                  {/* Username */}
+                  {/* Username with Profile Picture */}
                   <div className="flex items-center mb-2">
-                    <div className="w-8 h-8 bg-white/20 rounded-full mr-2 flex items-center justify-center">
-                      <User className="w-4 h-4 text-white" />
-                    </div>
-                    <span className="text-white font-semibold">{video.username}</span>
+                    <Avatar className="w-8 h-8 mr-2">
+                      <AvatarImage src={video.profilePhotoUrl || undefined} />
+                      <AvatarFallback className="bg-white/20">
+                        <User className="w-4 h-4 text-white" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <button
+                      onClick={() => {
+                        setSelectedUserId(video.userId);
+                        setSelectedUsername(video.username);
+                      }}
+                      className="text-white font-semibold hover:text-white/80 transition-colors"
+                    >
+                      {video.username}
+                    </button>
                   </div>
 
                   {/* Title */}
@@ -478,6 +497,19 @@ const VideoFeed = () => {
           videoId={commentsOpen}
           isOpen={!!commentsOpen}
           onClose={() => setCommentsOpen(null)}
+        />
+      )}
+
+      {/* User Profile Modal */}
+      {selectedUserId && (
+        <UserProfile
+          userId={selectedUserId}
+          username={selectedUsername}
+          isOpen={!!selectedUserId}
+          onClose={() => {
+            setSelectedUserId(null);
+            setSelectedUsername('');
+          }}
         />
       )}
 
