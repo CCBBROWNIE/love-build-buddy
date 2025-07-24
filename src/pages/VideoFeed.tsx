@@ -268,24 +268,48 @@ const VideoFeed = () => {
     }
   };
 
-  const handleVideoIntersection = (index: number, isVisible: boolean) => {
-    if (isVisible && index !== currentVideoIndex) {
-      setCurrentVideoIndex(index);
-      
-      // Pause all videos except the current one
-      videoRefs.current.forEach((video, idx) => {
-        if (video) {
-          if (idx === index) {
-            video.play().catch(error => {
-              console.error(`Error playing video ${idx}:`, error);
+  // Intersection observer to handle video playback based on visibility
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const videoIndex = parseInt(entry.target.getAttribute('data-video-index') || '0');
+          const video = videoRefs.current[videoIndex];
+          
+          if (entry.isIntersecting) {
+            // Video is in view - play it and pause others
+            setCurrentVideoIndex(videoIndex);
+            videoRefs.current.forEach((vid, idx) => {
+              if (vid) {
+                if (idx === videoIndex) {
+                  vid.play().catch(error => {
+                    console.error(`Error playing video ${idx}:`, error);
+                  });
+                } else {
+                  vid.pause();
+                }
+              }
             });
-          } else {
+          } else if (video) {
+            // Video is out of view - pause it
             video.pause();
           }
-        }
-      });
-    }
-  };
+        });
+      },
+      {
+        threshold: 0.5, // Video needs to be 50% visible to start playing
+        rootMargin: '0px'
+      }
+    );
+
+    // Observe all video containers
+    const videoContainers = document.querySelectorAll('[data-video-index]');
+    videoContainers.forEach(container => observer.observe(container));
+
+    return () => {
+      videoContainers.forEach(container => observer.unobserve(container));
+    };
+  }, [videos]);
 
   const togglePlayPause = () => {
     const currentVideo = videoRefs.current[currentVideoIndex];
@@ -336,6 +360,7 @@ const VideoFeed = () => {
         {videos.map((video, index) => (
           <div
             key={video.id}
+            data-video-index={index}
             className="relative w-full max-w-md mx-auto bg-card rounded-xl overflow-hidden shadow-lg"
             style={{ aspectRatio: '9/16', maxHeight: '600px' }}
           >
