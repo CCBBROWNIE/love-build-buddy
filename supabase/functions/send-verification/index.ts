@@ -235,7 +235,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email using Resend
     const emailResponse = await resend.emails.send({
-      from: "MeetCute <onboarding@resend.dev>",
+      from: "MeetCute <hello@resend.dev>",
       to: [email],
       subject: "Your MeetCute Verification Code",
       html: `
