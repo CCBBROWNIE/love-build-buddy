@@ -109,6 +109,7 @@ export function ProfilePhotoUpload({ onPhotoUploaded, currentPhotoUrl }: Profile
                 src={previewUrl} 
                 alt="Profile" 
                 className="w-full h-full object-cover"
+                style={{ objectPosition: 'center' }}
               />
             ) : (
               <Camera className="w-8 h-8 text-muted-foreground" />

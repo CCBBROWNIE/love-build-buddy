@@ -180,7 +180,10 @@ export default function Profile() {
           <CardContent className="pt-6">
             <div className="flex flex-col items-center text-center mb-6">
               <Avatar className="w-24 h-24 mb-4">
-                <AvatarImage src={profile.profile_photo_url || undefined} />
+                <AvatarImage 
+                  src={profile.profile_photo_url || undefined} 
+                  className="object-cover w-full h-full"
+                />
                 <AvatarFallback className="text-2xl">
                   {profile.first_name?.[0]}{profile.last_name?.[0]}
                 </AvatarFallback>

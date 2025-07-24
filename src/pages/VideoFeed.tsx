@@ -351,7 +351,10 @@ const VideoFeed = () => {
                   {/* Username with Profile Picture */}
                   <div className="flex items-center mb-2">
                     <Avatar className="w-8 h-8 mr-2">
-                      <AvatarImage src={video.profilePhotoUrl || undefined} />
+                      <AvatarImage 
+                        src={video.profilePhotoUrl || undefined} 
+                        className="object-cover w-full h-full"
+                      />
                       <AvatarFallback className="bg-white/20">
                         <User className="w-4 h-4 text-white" />
                       </AvatarFallback>

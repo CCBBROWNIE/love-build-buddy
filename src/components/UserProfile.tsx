@@ -134,7 +134,10 @@ export function UserProfile({ userId, username, isOpen, onClose }: UserProfilePr
             {/* Profile Header */}
             <div className="p-6 text-center border-b">
               <Avatar className="w-20 h-20 mx-auto mb-4">
-                <AvatarImage src={profile.profile_photo_url || undefined} />
+                <AvatarImage 
+                  src={profile.profile_photo_url || undefined} 
+                  className="object-cover w-full h-full"
+                />
                 <AvatarFallback className="text-lg">
                   {profile.first_name?.[0]}{profile.last_name?.[0]}
                 </AvatarFallback>
