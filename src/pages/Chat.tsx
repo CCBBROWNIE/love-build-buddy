@@ -305,9 +305,9 @@ const Chat = () => {
           </div>
 
           {/* AI Input */}
-          <div className="px-4 border-t border-border/50 glass backdrop-blur-lg">
+          <div className="px-4 py-3 border-t border-border/50 glass backdrop-blur-lg">
             <div className="max-w-4xl mx-auto">
-              <div className="flex items-center space-x-3 mb-3">
+              <div className="flex items-center space-x-3">
                 <Button
                   variant="outline"
                   size="sm"
@@ -344,7 +344,7 @@ const Chat = () => {
                 </Button>
               </div>
               
-              <div className="text-center">
+              <div className="text-center mt-2">
                 <p className="text-xs text-muted-foreground">
                   💡 <strong>Pro tip:</strong> Mention specific details like time, place, what you were wearing, or what caught your attention
                 </p>
