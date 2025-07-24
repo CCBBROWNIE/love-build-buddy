@@ -369,9 +369,19 @@ const VideoFeed = () => {
 
             {/* Content Overlay - Bottom */}
             <div className="absolute bottom-0 left-0 right-0 p-4 pb-24">
-              <div className="flex items-end justify-between">
-                {/* Left Side - Video Info Stacked */}
-                <div className="flex-1 mr-4 space-y-2">
+              <div className="flex justify-between items-end">
+                {/* Left Side - Video Info Stacked from bottom up */}
+                <div className="flex flex-col justify-end">
+                  {/* Description - Top */}
+                  <p className="text-white/90 text-sm leading-relaxed mb-1 max-w-xs">
+                    {video.description}
+                  </p>
+                  
+                  {/* Title - Middle */}
+                  <h3 className="text-white text-base font-bold mb-2 leading-tight">
+                    {video.title}
+                  </h3>
+                  
                   {/* Profile Picture and Username - Bottom most */}
                   <div className="flex items-center">
                     <Avatar className="w-8 h-8 mr-2">
@@ -393,16 +403,6 @@ const VideoFeed = () => {
                       {video.username}
                     </button>
                   </div>
-
-                  {/* Title - Directly under username */}
-                  <h3 className="text-white text-base font-bold leading-tight">
-                    {video.title}
-                  </h3>
-
-                  {/* Description - Directly under title */}
-                  <p className="text-white/90 text-sm leading-relaxed max-w-xs">
-                    {video.description}
-                  </p>
                 </div>
 
                 {/* Right Side - Actions */}
