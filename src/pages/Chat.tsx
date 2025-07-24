@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Sparkles, Send, Mic, MicOff, Volume2, VolumeX, Settings } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Sparkles, Send, Mic, MicOff, Volume2, VolumeX, Settings, MessageCircle, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
@@ -18,6 +19,7 @@ interface Message {
 
 const Chat = () => {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("ai");
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentMessage, setCurrentMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
@@ -191,178 +193,229 @@ const Chat = () => {
   return (
     <div className="min-h-screen bg-gradient-subtle flex flex-col pb-20">
       {/* Header */}
-      <div className="glass border-b backdrop-blur-lg p-4 flex items-center justify-between sticky top-0 z-40">
-        <div className="flex items-center space-x-3">
-          <Avatar className="border-2 border-spark shadow-warm animate-gentle-bounce">
-            <AvatarImage src="" />
-            <AvatarFallback className="bg-gradient-to-br from-spark to-coral text-midnight font-bold">
-              MC
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <h1 className="font-bold text-lg font-heading">
-              <span className="text-foreground">Meet</span>
-              <span className="text-spark">Cute</span>
-            </h1>
-            <p className="text-sm text-muted-foreground">Your AI Memory Assistant</p>
+      <div className="glass border-b backdrop-blur-lg p-4 sticky top-0 z-40">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="ai" className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              AI Assistant
+            </TabsTrigger>
+            <TabsTrigger value="messages" className="flex items-center gap-2">
+              <MessageCircle className="w-4 h-4" />
+              Private Messages
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <Avatar className="border-2 border-spark shadow-warm animate-gentle-bounce">
+              <AvatarImage src="" />
+              <AvatarFallback className="bg-gradient-to-br from-spark to-coral text-midnight font-bold">
+                {activeTab === "ai" ? "MC" : "PM"}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h1 className="font-bold text-lg font-heading">
+                {activeTab === "ai" ? (
+                  <>
+                    <span className="text-foreground">Meet</span>
+                    <span className="text-spark">Cute</span>
+                  </>
+                ) : (
+                  <span className="text-foreground">Private Messages</span>
+                )}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {activeTab === "ai" 
+                  ? "Your AI Memory Assistant" 
+                  : "Connect with people who found you"
+                }
+              </p>
+            </div>
           </div>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <Dialog open={showApiDialog} onOpenChange={setShowApiDialog}>
-            <DialogTrigger asChild>
+          
+          {activeTab === "ai" && (
+            <div className="flex items-center space-x-2">
+              <Dialog open={showApiDialog} onOpenChange={setShowApiDialog}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="rounded-full"
+                  >
+                    <Settings className="w-4 h-4 text-muted-foreground" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>API Settings</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Claude API Key</label>
+                      <Input
+                        type="password"
+                        placeholder="sk-..."
+                        value={tempApiKey}
+                        onChange={(e) => setTempApiKey(e.target.value)}
+                        className="mt-1"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Your API key is stored locally and never sent to our servers.
+                      </p>
+                    </div>
+                    <Button onClick={saveApiKey} className="w-full">
+                      Save API Key
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={toggleAudio}
                 className="rounded-full"
               >
-                <Settings className="w-4 h-4 text-muted-foreground" />
+                {audioEnabled ? (
+                  <Volume2 className="w-4 h-4 text-spark" />
+                ) : (
+                  <VolumeX className="w-4 h-4 text-muted-foreground" />
+                )}
               </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>API Settings</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">Claude API Key</label>
-                  <Input
-                    type="password"
-                    placeholder="sk-..."
-                    value={tempApiKey}
-                    onChange={(e) => setTempApiKey(e.target.value)}
-                    className="mt-1"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Your API key is stored locally and never sent to our servers.
-                  </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+        <TabsContent value="ai" className="flex-1 flex flex-col m-0">
+          {/* AI Messages */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-6">
+            {messages.map((message, index) => (
+              <div
+                key={message.id}
+                className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"} animate-fade-in`}
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className={`max-w-[85%] ${message.sender === "user" ? "order-2" : "order-1"}`}>
+                  {message.sender === "ai" && (
+                    <div className="flex items-center space-x-2 mb-2 animate-slide-in-left">
+                      <Sparkles className="w-4 h-4 text-spark animate-spark-pulse" />
+                      <span className="text-sm font-medium text-foreground">MeetCute</span>
+                    </div>
+                  )}
+                  
+                  <Card className={`${
+                    message.sender === "user" 
+                      ? "bg-gradient-to-r from-spark to-coral text-midnight shadow-warm" 
+                      : "bg-card/80 backdrop-blur-sm border-border/50 shadow-soft"
+                  } ${message.typing ? "animate-pulse" : "hover:shadow-elegant transition-all duration-300"}`}>
+                    <CardContent className="p-4">
+                      <p className={`text-sm whitespace-pre-wrap leading-relaxed ${
+                        message.sender === "user" ? "text-midnight font-medium" : "text-foreground"
+                      }`}>
+                        {message.text}
+                      </p>
+                      <p className={`text-xs mt-2 ${
+                        message.sender === "user" 
+                          ? "text-midnight/70" 
+                          : "text-muted-foreground"
+                      }`}>
+                        {message.timestamp.toLocaleTimeString([], { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })}
+                      </p>
+                    </CardContent>
+                  </Card>
                 </div>
-                <Button onClick={saveApiKey} className="w-full">
-                  Save API Key
+              </div>
+            ))}
+            
+            {isTyping && (
+              <div className="flex justify-start">
+                <div className="max-w-[80%]">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Sparkles className="w-4 h-4 text-spark animate-spin" />
+                    <span className="text-sm font-medium text-black">MeetCute is thinking...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* AI Input */}
+          <div className="p-4 border-t border-border/50 glass backdrop-blur-lg">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex items-center space-x-3 mb-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleRecording}
+                  className={`rounded-full transition-all duration-300 ${
+                    isRecording 
+                      ? "bg-coral text-white shadow-warm animate-spark-pulse" 
+                      : "hover:scale-105"
+                  }`}
+                >
+                  {isRecording ? (
+                    <MicOff className="w-4 h-4" />
+                  ) : (
+                    <Mic className="w-4 h-4" />
+                  )}
+                </Button>
+                
+                <Input
+                  placeholder="Share your spark moment... Where were you? What happened?"
+                  value={currentMessage}
+                  onChange={(e) => setCurrentMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="flex-1 h-12 rounded-xl border-border/50 bg-background/50 backdrop-blur-sm focus:shadow-warm focus:border-spark/50 transition-all duration-300"
+                />
+                
+                <Button
+                  variant="spark"
+                  size="lg"
+                  onClick={handleSendMessage}
+                  disabled={!currentMessage.trim()}
+                  className="rounded-xl px-6"
+                >
+                  <Send className="w-4 h-4" />
                 </Button>
               </div>
-            </DialogContent>
-          </Dialog>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleAudio}
-            className="rounded-full"
-          >
-            {audioEnabled ? (
-              <Volume2 className="w-4 h-4 text-spark" />
-            ) : (
-              <VolumeX className="w-4 h-4 text-muted-foreground" />
-            )}
-          </Button>
-        </div>
-      </div>
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {messages.map((message, index) => (
-          <div
-            key={message.id}
-            className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"} animate-fade-in`}
-            style={{ animationDelay: `${index * 0.1}s` }}
-          >
-            <div className={`max-w-[85%] ${message.sender === "user" ? "order-2" : "order-1"}`}>
-              {message.sender === "ai" && (
-                <div className="flex items-center space-x-2 mb-2 animate-slide-in-left">
-                  <Sparkles className="w-4 h-4 text-spark animate-spark-pulse" />
-                  <span className="text-sm font-medium text-foreground">MeetCute</span>
-                </div>
-              )}
               
-              <Card className={`${
-                message.sender === "user" 
-                  ? "bg-gradient-to-r from-spark to-coral text-midnight shadow-warm" 
-                  : "bg-card/80 backdrop-blur-sm border-border/50 shadow-soft"
-              } ${message.typing ? "animate-pulse" : "hover:shadow-elegant transition-all duration-300"}`}>
-                <CardContent className="p-4">
-                  <p className={`text-sm whitespace-pre-wrap leading-relaxed ${
-                    message.sender === "user" ? "text-midnight font-medium" : "text-foreground"
-                  }`}>
-                    {message.text}
-                  </p>
-                  <p className={`text-xs mt-2 ${
-                    message.sender === "user" 
-                      ? "text-midnight/70" 
-                      : "text-muted-foreground"
-                  }`}>
-                    {message.timestamp.toLocaleTimeString([], { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    })}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        ))}
-        
-        {isTyping && (
-          <div className="flex justify-start">
-            <div className="max-w-[80%]">
-              <div className="flex items-center space-x-2 mb-2">
-                <Sparkles className="w-4 h-4 text-spark animate-spin" />
-                <span className="text-sm font-medium text-black">MeetCute is thinking...</span>
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground">
+                  💡 <strong>Pro tip:</strong> Mention specific details like time, place, what you were wearing, or what caught your attention
+                </p>
               </div>
             </div>
           </div>
-        )}
-        
-        <div ref={messagesEndRef} />
-      </div>
+        </TabsContent>
 
-      {/* Enhanced Input */}
-      <div className="p-4 border-t border-border/50 glass backdrop-blur-lg">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center space-x-3 mb-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleRecording}
-              className={`rounded-full transition-all duration-300 ${
-                isRecording 
-                  ? "bg-coral text-white shadow-warm animate-spark-pulse" 
-                  : "hover:scale-105"
-              }`}
-            >
-              {isRecording ? (
-                <MicOff className="w-4 h-4" />
-              ) : (
-                <Mic className="w-4 h-4" />
-              )}
-            </Button>
-            
-            <Input
-              placeholder="Share your spark moment... Where were you? What happened?"
-              value={currentMessage}
-              onChange={(e) => setCurrentMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              className="flex-1 h-12 rounded-xl border-border/50 bg-background/50 backdrop-blur-sm focus:shadow-warm focus:border-spark/50 transition-all duration-300"
-            />
-            
-            <Button
-              variant="spark"
-              size="lg"
-              onClick={handleSendMessage}
-              disabled={!currentMessage.trim()}
-              className="rounded-xl px-6"
-            >
-              <Send className="w-4 h-4" />
-            </Button>
+        <TabsContent value="messages" className="flex-1 flex flex-col m-0">
+          {/* Private Messages Content */}
+          <div className="flex-1 flex items-center justify-center p-8">
+            <div className="text-center max-w-md">
+              <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <MessageCircle className="w-10 h-10 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold mb-4">Private Messages</h2>
+              <p className="text-muted-foreground mb-6">
+                This is where people who discover your profile through videos can send you private messages. Messages will appear here when someone reaches out!
+              </p>
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                <Users className="w-4 h-4" />
+                <span>No messages yet</span>
+              </div>
+            </div>
           </div>
-          
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground">
-              💡 <strong>Pro tip:</strong> Mention specific details like time, place, what you were wearing, or what caught your attention
-            </p>
-          </div>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
