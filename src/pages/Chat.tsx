@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sparkles, Send, Mic, MicOff, Volume2, VolumeX, Settings, MessageCircle, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   id: string;
@@ -25,9 +26,6 @@ const Chat = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('claude_api_key') || "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");
-  const [showApiDialog, setShowApiDialog] = useState(false);
-  const [tempApiKey, setTempApiKey] = useState("");
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -39,12 +37,6 @@ const Chat = () => {
     scrollToBottom();
   }, [messages]);
 
-  useEffect(() => {
-    // Save API key to localStorage whenever it changes
-    if (apiKey) {
-      localStorage.setItem('claude_api_key', apiKey);
-    }
-  }, [apiKey]);
 
   useEffect(() => {
     // Initial AI greeting - only set once when component mounts
@@ -62,14 +54,6 @@ const Chat = () => {
     }
   }, []); // Empty dependency array so it only runs once
 
-  const saveApiKey = () => {
-    setApiKey(tempApiKey);
-    setShowApiDialog(false);
-    toast({
-      title: "API Key Saved",
-      description: "You can now chat with real AI!",
-    });
-  };
 
   const callClaude = async (userMessage: string) => {
     console.log("Real AI function started with message:", userMessage);
@@ -81,24 +65,21 @@ const Chat = () => {
         content: msg.text
       }));
 
-      const response = await fetch('https://gqmzhldcotgxvwlmjxp.supabase.co/functions/v1/chat-ai', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxbXpobGRmY290Z3h2d2xtanhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyODk2ODYsImV4cCI6MjA2ODg2NTY4Nn0.sbnoFgrPAhQeXWfw61ZpPt-DTi9Kfb-O2kP8l9S8tcU'
-        },
-        body: JSON.stringify({
+      console.log("Previous messages:", conversationHistory);
+
+      const { data, error } = await supabase.functions.invoke('chat-ai', {
+        body: {
           message: userMessage,
           conversationHistory: conversationHistory
-        }),
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`AI API error: ${response.status}`);
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(`AI function error: ${error.message}`);
       }
 
-      const data = await response.json();
-      const aiResponse = data.response || "I'm sorry, I had trouble processing that. Could you try again?";
+      const aiResponse = data?.response || "I'm sorry, I had trouble processing that. Could you try again?";
 
       console.log("Real AI responded with:", aiResponse);
 
@@ -235,57 +216,20 @@ const Chat = () => {
             </div>
           </div>
           
-          {activeTab === "ai" && (
-            <div className="flex items-center space-x-2">
-              <Dialog open={showApiDialog} onOpenChange={setShowApiDialog}>
-                <DialogTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="rounded-full"
-                  >
-                    <Settings className="w-4 h-4 text-muted-foreground" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>API Settings</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium">Claude API Key</label>
-                      <Input
-                        type="password"
-                        placeholder="sk-..."
-                        value={tempApiKey}
-                        onChange={(e) => setTempApiKey(e.target.value)}
-                        className="mt-1"
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Your API key is stored locally and never sent to our servers.
-                      </p>
-                    </div>
-                    <Button onClick={saveApiKey} className="w-full">
-                      Save API Key
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleAudio}
-                className="rounded-full"
-              >
-                {audioEnabled ? (
-                  <Volume2 className="w-4 h-4 text-spark" />
-                ) : (
-                  <VolumeX className="w-4 h-4 text-muted-foreground" />
-                )}
-              </Button>
-            </div>
-          )}
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleAudio}
+              className="rounded-full"
+            >
+              {audioEnabled ? (
+                <Volume2 className="w-4 h-4 text-spark" />
+              ) : (
+                <VolumeX className="w-4 h-4 text-muted-foreground" />
+              )}
+            </Button>
+          </div>
         </div>
       </div>
 
