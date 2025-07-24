@@ -108,6 +108,27 @@ export type Database = {
         }
         Relationships: []
       }
+      follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
       matches: {
         Row: {
           confidence_score: number
@@ -354,7 +375,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_follower_count: {
+        Args: { user_id: string }
+        Returns: number
+      }
+      get_following_count: {
+        Args: { user_id: string }
+        Returns: number
+      }
+      is_following: {
+        Args: { follower_user_id: string; following_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

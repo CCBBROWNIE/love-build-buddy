@@ -17,7 +17,10 @@ import {
   Mail,
   Video,
   Heart,
-  MessageCircle
+  MessageCircle,
+  Users,
+  UserPlus,
+  UserMinus
 } from 'lucide-react';
 
 interface Profile {
@@ -53,24 +56,39 @@ export default function Profile() {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [bio, setBio] = useState('');
   const [totalLikes, setTotalLikes] = useState(0);
+  const [followers, setFollowers] = useState(0);
+  const [following, setFollowing] = useState(0);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [targetUserId, setTargetUserId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
-      fetchProfile();
-      fetchUserVideos();
+      // Check if viewing own profile or another user's profile
+      const urlParams = new URLSearchParams(window.location.search);
+      const userId = urlParams.get('userId');
+      setTargetUserId(userId || user.id);
+      
+      fetchProfile(userId || user.id);
+      fetchUserVideos(userId || user.id);
+      fetchFollowCounts(userId || user.id);
+      
+      if (userId && userId !== user.id) {
+        checkIfFollowing(userId);
+      }
     }
   }, [user]);
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (profileUserId?: string) => {
     if (!user) return;
+    const userId = profileUserId || user.id;
 
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .single();
 
       if (error) throw error;
@@ -88,14 +106,15 @@ export default function Profile() {
     }
   };
 
-  const fetchUserVideos = async () => {
+  const fetchUserVideos = async (profileUserId?: string) => {
     if (!user) return;
+    const userId = profileUserId || user.id;
 
     try {
       const { data, error } = await supabase
         .from('videos')
         .select('id, title, description, video_url, thumbnail_url, likes_count, comments_count, created_at, category')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .eq('status', 'active')
         .order('created_at', { ascending: false });
 
@@ -109,6 +128,88 @@ export default function Profile() {
       console.error('Error fetching user videos:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchFollowCounts = async (profileUserId: string) => {
+    try {
+      // Get follower count
+      const { data: followerData } = await supabase.rpc('get_follower_count', {
+        user_id: profileUserId
+      });
+      
+      // Get following count
+      const { data: followingData } = await supabase.rpc('get_following_count', {
+        user_id: profileUserId
+      });
+      
+      setFollowers(followerData || 0);
+      setFollowing(followingData || 0);
+    } catch (error) {
+      console.error('Error fetching follow counts:', error);
+    }
+  };
+
+  const checkIfFollowing = async (profileUserId: string) => {
+    if (!user) return;
+    
+    try {
+      const { data } = await supabase.rpc('is_following', {
+        follower_user_id: user.id,
+        following_user_id: profileUserId
+      });
+      
+      setIsFollowing(data || false);
+    } catch (error) {
+      console.error('Error checking follow status:', error);
+    }
+  };
+
+  const handleFollow = async () => {
+    if (!user || !targetUserId || targetUserId === user.id) return;
+
+    try {
+      if (isFollowing) {
+        // Unfollow
+        const { error } = await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', user.id)
+          .eq('following_id', targetUserId);
+
+        if (error) throw error;
+        
+        setIsFollowing(false);
+        setFollowers(prev => Math.max(0, prev - 1));
+        toast({
+          title: "Unfollowed",
+          description: "You are no longer following this user.",
+        });
+      } else {
+        // Follow
+        const { error } = await supabase
+          .from('follows')
+          .insert({
+            follower_id: user.id,
+            following_id: targetUserId
+          });
+
+        if (error) throw error;
+        
+        setIsFollowing(true);
+        setFollowers(prev => prev + 1);
+        toast({
+          title: "Following",
+          description: "You are now following this user!",
+        });
+      }
+    } catch (error) {
+      console.error('Error updating follow status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update follow status. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -145,6 +246,8 @@ export default function Profile() {
     }
   };
 
+  const isOwnProfile = targetUserId === user?.id;
+  
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'memory': return 'bg-purple-500/80';
@@ -223,17 +326,24 @@ export default function Profile() {
                <div className="flex justify-center gap-6 mb-6">
                  <div className="text-center">
                    <div className="flex items-center justify-center gap-1">
+                     <Users className="w-4 h-4 text-muted-foreground" />
+                     <span className="font-bold">{followers}</span>
+                   </div>
+                   <span className="text-xs text-muted-foreground">Followers</span>
+                 </div>
+                 <div className="text-center">
+                   <div className="flex items-center justify-center gap-1">
+                     <UserPlus className="w-4 h-4 text-muted-foreground" />
+                     <span className="font-bold">{following}</span>
+                   </div>
+                   <span className="text-xs text-muted-foreground">Following</span>
+                 </div>
+                 <div className="text-center">
+                   <div className="flex items-center justify-center gap-1">
                      <Heart className="w-4 h-4 text-muted-foreground" />
                      <span className="font-bold">{totalLikes}</span>
                    </div>
                    <span className="text-xs text-muted-foreground">Total Likes</span>
-                 </div>
-                 <div className="text-center">
-                   <div className="flex items-center justify-center gap-1">
-                     <Video className="w-4 h-4 text-muted-foreground" />
-                     <span className="font-bold">{videos.length}</span>
-                   </div>
-                   <span className="text-xs text-muted-foreground">Videos</span>
                  </div>
                </div>
 
@@ -246,14 +356,16 @@ export default function Profile() {
                 </div>
               </div>
 
-              {/* Edit Profile Button */}
-              <Dialog open={isEditingProfile} onOpenChange={setIsEditingProfile}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="w-full">
-                    <Edit3 className="w-4 h-4 mr-2" />
-                    Edit Profile
-                  </Button>
-                </DialogTrigger>
+               {/* Action Buttons */}
+               {isOwnProfile ? (
+                 /* Edit Profile Button for own profile */
+                 <Dialog open={isEditingProfile} onOpenChange={setIsEditingProfile}>
+                   <DialogTrigger asChild>
+                     <Button variant="outline" className="w-full">
+                       <Edit3 className="w-4 h-4 mr-2" />
+                       Edit Profile
+                     </Button>
+                   </DialogTrigger>
                 <DialogContent className="max-w-md">
                   <DialogHeader>
                     <DialogTitle>Edit Profile</DialogTitle>
@@ -294,9 +406,29 @@ export default function Profile() {
                         Cancel
                       </Button>
                     </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+                   </div>
+                 </DialogContent>
+               </Dialog>
+               ) : (
+                 /* Follow Button for other profiles */
+                 <Button 
+                   variant={isFollowing ? "outline" : "default"}
+                   className="w-full"
+                   onClick={handleFollow}
+                 >
+                   {isFollowing ? (
+                     <>
+                       <UserMinus className="w-4 h-4 mr-2" />
+                       Unfollow
+                     </>
+                   ) : (
+                     <>
+                       <UserPlus className="w-4 h-4 mr-2" />
+                       Follow
+                     </>
+                   )}
+                 </Button>
+               )}
             </div>
           </CardContent>
         </Card>
