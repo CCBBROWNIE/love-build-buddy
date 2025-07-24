@@ -51,7 +51,7 @@ const Chat = () => {
     if (messages.length === 0) {
       const greeting: Message = {
         id: "1",
-        text: "Hi there! 👋 I'm MeetCute, and I'm genuinely excited to meet you.\n\nI spend my days helping people reconnect with those amazing humans they crossed paths with but never got to properly meet. You know that feeling when you see someone and there's just... a spark? I live for those stories.\n\nDo you have a moment like that you'd like to share with me?",
+        text: "I'm here to help you reconnect with someone, or shoot your shot with someone you didn't get a chance to exchange contact info with — but haven't stopped thinking about since.\n\nYou know those brief, electric moments where your eyes meet, or a shared laugh lingers — and then it's gone before anything more could happen? I'm here to break the ice.\n\nTell me who's on your mind.",
         sender: "ai",
         timestamp: new Date(),
       };
