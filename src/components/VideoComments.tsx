@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Send, X } from 'lucide-react';
+import { MessageCircle, Send, X, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +15,8 @@ interface Comment {
   content: string;
   created_at: string;
   user_id: string;
+  likes_count: number;
+  isLiked?: boolean;
   profiles?: {
     first_name: string;
     last_name: string;
@@ -46,7 +49,7 @@ export const VideoComments = ({ videoId, isOpen, onClose }: VideoCommentsProps) 
     try {
       const { data: commentsData, error } = await supabase
         .from('comments')
-        .select('id, content, created_at, user_id')
+        .select('id, content, created_at, user_id, likes_count')
         .eq('video_id', videoId)
         .order('created_at', { ascending: true });
 
@@ -64,9 +67,19 @@ export const VideoComments = ({ videoId, isOpen, onClose }: VideoCommentsProps) 
 
       const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
 
+      // Fetch current user's likes for these comments
+      const { data: userLikes } = user ? await supabase
+        .from('comment_likes')
+        .select('comment_id')
+        .eq('user_id', user.id)
+        .in('comment_id', commentsData?.map(c => c.id) || []) : { data: [] };
+
+      const likedCommentsSet = new Set(userLikes?.map(like => like.comment_id) || []);
+
       const commentsWithProfiles = commentsData?.map(comment => ({
         ...comment,
-        profiles: profilesMap.get(comment.user_id) || null
+        profiles: profilesMap.get(comment.user_id) || null,
+        isLiked: likedCommentsSet.has(comment.id)
       })) || [];
 
       setComments(commentsWithProfiles);
@@ -109,6 +122,56 @@ export const VideoComments = ({ videoId, isOpen, onClose }: VideoCommentsProps) 
       console.error('Error in handleAddComment:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleLikeComment = async (commentId: string) => {
+    if (!user) return;
+
+    try {
+      const comment = comments.find(c => c.id === commentId);
+      if (!comment) return;
+
+      if (comment.isLiked) {
+        // Unlike the comment
+        const { error } = await supabase
+          .from('comment_likes')
+          .delete()
+          .eq('comment_id', commentId)
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+      } else {
+        // Like the comment
+        const { error } = await supabase
+          .from('comment_likes')
+          .insert({
+            comment_id: commentId,
+            user_id: user.id
+          });
+
+        if (error) throw error;
+      }
+
+      // Update local state optimistically
+      setComments(prevComments => 
+        prevComments.map(c => 
+          c.id === commentId 
+            ? { 
+                ...c, 
+                isLiked: !c.isLiked,
+                likes_count: c.isLiked ? c.likes_count - 1 : c.likes_count + 1
+              }
+            : c
+        )
+      );
+    } catch (error) {
+      console.error('Error liking comment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to like comment. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -175,6 +238,29 @@ export const VideoComments = ({ videoId, isOpen, onClose }: VideoCommentsProps) 
                         </span>
                       </div>
                       <p className="text-sm mt-1 break-words">{comment.content}</p>
+                      
+                      {/* Like section */}
+                      <div className="flex items-center mt-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleLikeComment(comment.id)}
+                          className="h-auto p-1 hover:bg-transparent"
+                          disabled={!user}
+                        >
+                          <Heart 
+                            className={cn(
+                              "w-4 h-4 mr-1",
+                              comment.isLiked 
+                                ? "fill-red-500 text-red-500" 
+                                : "text-muted-foreground hover:text-red-500"
+                            )} 
+                          />
+                          <span className="text-xs text-muted-foreground">
+                            {comment.likes_count || 0}
+                          </span>
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
