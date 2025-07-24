@@ -3,19 +3,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { ProfilePhotoUpload } from '@/components/ProfilePhotoUpload';
 import { 
   User, 
-  Camera, 
   Edit3, 
   Calendar,
   Mail,
   Video,
   Heart,
-  MessageCircle
+  MessageCircle,
+  Users,
+  UserPlus,
+  Camera
 } from 'lucide-react';
 
 interface Profile {
@@ -49,7 +53,11 @@ export default function Profile() {
   const [videos, setVideos] = useState<UserVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [bio, setBio] = useState('');
+  const [totalLikes, setTotalLikes] = useState(0);
+  const [followers, setFollowers] = useState(0);
+  const [following, setFollowing] = useState(0);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -98,8 +106,18 @@ export default function Profile() {
 
       if (error) throw error;
       setVideos(data || []);
+      
+      // Calculate total likes
+      const totalVideoLikes = data?.reduce((sum, video) => sum + (video.likes_count || 0), 0) || 0;
+      setTotalLikes(totalVideoLikes);
+      
+      // Mock data for followers/following - you can replace with real data later
+      setFollowers(42);
+      setFollowing(23);
     } catch (error) {
       console.error('Error fetching user videos:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -210,6 +228,31 @@ export default function Profile() {
                 <span>Joined {new Date(profile.created_at).toLocaleDateString()}</span>
               </div>
 
+              {/* Social Stats */}
+              <div className="flex justify-center gap-6 mb-6">
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <Users className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-bold">{followers}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">Followers</span>
+                </div>
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <UserPlus className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-bold">{following}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">Following</span>
+                </div>
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <Heart className="w-4 h-4 text-muted-foreground" />
+                    <span className="font-bold">{totalLikes}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">Likes</span>
+                </div>
+              </div>
+
               {/* Bio Section */}
               <div className="w-full">
                 {isEditing ? (
@@ -255,17 +298,30 @@ export default function Profile() {
                   </div>
                 )}
               </div>
+
+              {/* Edit Profile Button */}
+              <Dialog open={isEditingProfile} onOpenChange={setIsEditingProfile}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="w-full">
+                    <Edit3 className="w-4 h-4 mr-2" />
+                    Edit Profile
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Edit Profile</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-6">
+                    <ProfilePhotoUpload
+                      onPhotoUploaded={handlePhotoUploaded}
+                      currentPhotoUrl={profile.profile_photo_url}
+                    />
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </CardContent>
         </Card>
-
-        {/* Profile Photo Upload */}
-        <div className="mb-6">
-          <ProfilePhotoUpload
-            onPhotoUploaded={handlePhotoUploaded}
-            currentPhotoUrl={profile.profile_photo_url}
-          />
-        </div>
 
         {/* Videos Section */}
         <Card>

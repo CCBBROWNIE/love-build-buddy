@@ -12,7 +12,10 @@ import {
   VolumeX,
   MoreHorizontal,
   User,
-  Trash2
+  Trash2,
+  Repeat2,
+  Copy,
+  Download
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -230,6 +233,41 @@ const VideoFeed = () => {
     }
   };
 
+  const handleRepost = async (videoId: string) => {
+    // For now, just show a toast - you can implement repost logic later
+    toast({
+      title: "Repost feature",
+      description: "Repost functionality coming soon!",
+    });
+  };
+
+  const handleShare = async (video: VideoPost) => {
+    try {
+      if (navigator.share) {
+        // Use native share API if available
+        await navigator.share({
+          title: video.title,
+          text: video.description,
+          url: video.videoUrl,
+        });
+      } else {
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(video.videoUrl);
+        toast({
+          title: "Link copied!",
+          description: "Video link has been copied to clipboard.",
+        });
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      toast({
+        title: "Share failed",
+        description: "Unable to share this video. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleScroll = () => {
     if (!containerRef.current) return;
     
@@ -418,11 +456,25 @@ const VideoFeed = () => {
                   <Button
                     variant="ghost"
                     size="sm"
+                    onClick={() => handleShare(video)}
                     className="flex flex-col items-center p-2 hover:bg-white/10 rounded-full"
                   >
                     <Share className="w-7 h-7 text-white mb-1" />
                     <span className="text-white text-xs font-medium">
                       {formatCount(video.shares)}
+                    </span>
+                  </Button>
+
+                  {/* Repost Button */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRepost(video.id)}
+                    className="flex flex-col items-center p-2 hover:bg-white/10 rounded-full"
+                  >
+                    <Repeat2 className="w-7 h-7 text-white mb-1" />
+                    <span className="text-white text-xs font-medium">
+                      Repost
                     </span>
                   </Button>
 
@@ -438,7 +490,21 @@ const VideoFeed = () => {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="bg-background border border-border">
-                      {user && video.id && (
+                      <DropdownMenuItem
+                        onClick={() => handleShare(video)}
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <Copy className="w-4 h-4" />
+                        Copy Link
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => window.open(video.videoUrl, '_blank')}
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <Download className="w-4 h-4" />
+                        Download
+                      </DropdownMenuItem>
+                      {user && video.userId === user.id && (
                         <DropdownMenuItem
                           onClick={() => handleDeleteVideo(video.id)}
                           className="text-destructive flex items-center gap-2 cursor-pointer"
