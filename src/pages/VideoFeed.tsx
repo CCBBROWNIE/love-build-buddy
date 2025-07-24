@@ -372,17 +372,17 @@ const VideoFeed = () => {
               <div className="flex justify-between items-end">
                 {/* Left Side - Video Info Stacked from bottom up */}
                 <div className="flex flex-col justify-end">
-                  {/* Description - Top */}
-                  <p className="text-white/90 text-sm leading-relaxed mb-1 max-w-xs">
+                  {/* Description - Top of stack */}
+                  <p className="text-white/90 text-sm leading-relaxed mb-2 max-w-xs">
                     {video.description}
                   </p>
                   
-                  {/* Title - Middle */}
+                  {/* Caption/Title - Middle of stack */}
                   <h3 className="text-white text-base font-bold mb-2 leading-tight">
                     {video.title}
                   </h3>
                   
-                  {/* Profile Picture and Username - Bottom most */}
+                  {/* Profile Picture and Username - Bottom of stack */}
                   <div className="flex items-center">
                     <Avatar className="w-8 h-8 mr-2">
                       <AvatarImage 
