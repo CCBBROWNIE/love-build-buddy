@@ -2,11 +2,10 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, MapPin, Heart, Sparkles, Plus, Trash2 } from "lucide-react";
+import { Clock, MapPin, Heart, Sparkles, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { MemorySubmission } from "@/components/MemorySubmission";
 
 interface Memory {
   id: string;
@@ -22,7 +21,6 @@ interface Memory {
 const Memories = () => {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showSubmission, setShowSubmission] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -174,21 +172,14 @@ const Memories = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-card border-b border-border p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center">
-              <Sparkles className="w-6 h-6 text-spark mr-2" />
-              Your Spark Vault
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {waitingMemories.length} waiting • {matchedMemories.length} matched
-            </p>
-          </div>
-          
-          <Button variant="spark" size="sm" onClick={() => setShowSubmission(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Memory
-          </Button>
+        <div>
+          <h1 className="text-2xl font-bold flex items-center">
+            <Sparkles className="w-6 h-6 text-spark mr-2" />
+            Your Spark Vault
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {waitingMemories.length} waiting • {matchedMemories.length} matched
+          </p>
         </div>
       </div>
 
@@ -226,13 +217,9 @@ const Memories = () => {
               <CardContent>
                 <Sparkles className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="font-medium text-foreground mb-2">No memories waiting</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Share your first memory to start finding connections
+                <p className="text-sm text-muted-foreground">
+                  Chat with MeetCute.ai to create your first memory to start connecting.
                 </p>
-                <Button variant="spark" onClick={() => setShowSubmission(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Your First Memory
-                </Button>
               </CardContent>
             </Card>
           )}
@@ -242,25 +229,14 @@ const Memories = () => {
         {memories.length === 0 && (
           <div className="text-center py-12">
             <Sparkles className="w-16 h-16 text-muted-foreground mx-auto mb-6" />
-            <h2 className="text-xl font-bold mb-2">Start Your Story</h2>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Describe a moment when you almost met someone special. 
-              If they remember it too, we'll make the connection.
+            <h2 className="text-xl font-bold mb-2">No memories waiting</h2>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              Chat with MeetCute.ai to create your first memory to start connecting.
             </p>
-            <Button variant="spark" size="lg" onClick={() => setShowSubmission(true)}>
-              <Plus className="w-5 h-5 mr-2" />
-              Share Your First Memory
-            </Button>
           </div>
         )}
       </div>
 
-      {showSubmission && (
-        <MemorySubmission
-          onClose={() => setShowSubmission(false)}
-          onSuccess={loadMemories}
-        />
-      )}
     </div>
   );
 };
