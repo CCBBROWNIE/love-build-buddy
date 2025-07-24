@@ -406,7 +406,7 @@ const Chat = () => {
               </div>
               <h2 className="text-2xl font-bold mb-4">Private Messages</h2>
               <p className="text-muted-foreground mb-6">
-                This is where people who discover your profile through videos can send you private messages. Messages will appear here when someone reaches out!
+                Don't worry, people can only find your profile through the feed if you comment or post.
               </p>
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <Users className="w-4 h-4" />
