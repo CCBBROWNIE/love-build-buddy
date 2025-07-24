@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { UserProfile } from '@/components/UserProfile';
+import { sanitizeText, commentSchema } from '@/lib/security';
 
 interface Comment {
   id: string;
@@ -91,14 +92,28 @@ export const VideoComments = ({ videoId, isOpen, onClose }: VideoCommentsProps) 
   const handleAddComment = async () => {
     if (!newComment.trim() || !user) return;
 
+    // Validate comment content
+    const validationResult = commentSchema.safeParse(newComment.trim());
+    if (!validationResult.success) {
+      toast({
+        title: "Invalid comment",
+        description: validationResult.error.errors[0].message,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
+      // Sanitize the comment content
+      const sanitizedContent = sanitizeText(newComment.trim());
+      
       const { error } = await supabase
         .from('comments')
         .insert({
           video_id: videoId,
           user_id: user.id,
-          content: newComment.trim()
+          content: sanitizedContent
         });
 
       if (error) {
@@ -279,7 +294,13 @@ export const VideoComments = ({ videoId, isOpen, onClose }: VideoCommentsProps) 
                 onChange={(e) => setNewComment(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
                 disabled={isLoading}
+                maxLength={500}
               />
+              {newComment.length > 450 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {500 - newComment.length} characters remaining
+                </p>
+              )}
               <Button 
                 onClick={handleAddComment} 
                 disabled={!newComment.trim() || isLoading}

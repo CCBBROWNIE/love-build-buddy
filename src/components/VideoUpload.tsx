@@ -9,6 +9,7 @@ import { Upload, Camera, X, Play } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { validateVideoFile, sanitizeText, videoDescriptionSchema } from '@/lib/security';
 
 interface VideoUploadProps {
   onVideoUploaded?: () => void;
@@ -30,17 +31,20 @@ export function VideoUpload({ onVideoUploaded }: VideoUploadProps) {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.type.startsWith('video/')) {
-        setSelectedFile(file);
-        const url = URL.createObjectURL(file);
-        setPreviewUrl(url);
-      } else {
+      // Enhanced file validation
+      const validation = validateVideoFile(file);
+      if (!validation.valid) {
         toast({
-          title: "Invalid file type",
-          description: "Please select a video file",
+          title: "Invalid file",
+          description: validation.error,
           variant: "destructive"
         });
+        return;
       }
+      
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
     }
   };
 
@@ -52,6 +56,19 @@ export function VideoUpload({ onVideoUploaded }: VideoUploadProps) {
         variant: "destructive"
       });
       return;
+    }
+
+    // Validate description if provided
+    if (formData.description.trim()) {
+      const descValidation = videoDescriptionSchema.safeParse(formData.description.trim());
+      if (!descValidation.success) {
+        toast({
+          title: "Invalid description",
+          description: descValidation.error.errors[0].message,
+          variant: "destructive"
+        });
+        return;
+      }
     }
 
     setUploading(true);
@@ -75,13 +92,13 @@ export function VideoUpload({ onVideoUploaded }: VideoUploadProps) {
         .from('user-videos')
         .getPublicUrl(fileName);
 
-      // Save video metadata to database
+      // Save video metadata to database with sanitized content
       const { error: dbError } = await supabase
         .from('videos')
         .insert({
           user_id: user.id,
-          title: formData.title.trim(),
-          description: formData.description.trim(),
+          title: sanitizeText(formData.title.trim()),
+          description: formData.description.trim() ? sanitizeText(formData.description.trim()) : '',
           video_url: publicUrl,
           category: 'user-content'
         });

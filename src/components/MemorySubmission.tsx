@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { sanitizeText, memoryContentSchema } from "@/lib/security";
 
 interface MemorySubmissionProps {
   onClose: () => void;
@@ -29,10 +30,12 @@ export const MemorySubmission = ({ onClose, onSuccess }: MemorySubmissionProps) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!description.trim()) {
+    // Validate memory content
+    const validationResult = memoryContentSchema.safeParse(description.trim());
+    if (!validationResult.success) {
       toast({
-        title: "Memory required",
-        description: "Please describe your memory",
+        title: "Invalid memory description",
+        description: validationResult.error.errors[0].message,
         variant: "destructive",
       });
       return;
@@ -50,14 +53,18 @@ export const MemorySubmission = ({ onClose, onSuccess }: MemorySubmissionProps) 
     setIsSubmitting(true);
 
     try {
+      // Sanitize input content
+      const sanitizedDescription = sanitizeText(description.trim());
+      const sanitizedLocation = location ? sanitizeText(location.trim()) : '';
+      
       // Create the conversation string for the AI to process
       const conversation = `User: I want to share a missed connection memory.
 
 MeetCute: Tell me about your memory!
 
-User: ${description}
+User: ${sanitizedDescription}
 
-${location ? `The location was: ${location}` : ''}
+${sanitizedLocation ? `The location was: ${sanitizedLocation}` : ''}
 ${date ? `This happened around: ${format(date, "PPP")}` : ''}
 
 MeetCute: I'll help you find this person! Let me process your memory and look for potential matches.`;
@@ -122,10 +129,16 @@ MeetCute: I'll help you find this person! Let me process your memory and look fo
                 onChange={(e) => setDescription(e.target.value)}
                 rows={6}
                 className="resize-none"
+                maxLength={2000}
               />
-              <p className="text-xs text-muted-foreground">
-                The more details you include, the better we can find matches!
-              </p>
+              <div className="flex justify-between items-center">
+                <p className="text-xs text-muted-foreground">
+                  The more details you include, the better we can find matches!
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {description.length}/2000
+                </p>
+              </div>
             </div>
 
             <div className="space-y-2">

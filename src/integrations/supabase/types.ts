@@ -290,6 +290,36 @@ export type Database = {
         }
         Relationships: []
       }
+      security_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       video_interactions: {
         Row: {
           created_at: string
@@ -375,6 +405,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_verifications: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_follower_count: {
         Args: { user_id: string }
         Returns: number

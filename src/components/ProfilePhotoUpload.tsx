@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Camera, Upload, Check } from 'lucide-react';
+import { validateImageFile } from '@/lib/security';
 
 interface ProfilePhotoUploadProps {
   onPhotoUploaded: (url: string) => void;
@@ -22,21 +23,12 @@ export function ProfilePhotoUpload({ onPhotoUploaded, currentPhotoUrl }: Profile
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
+    // Enhanced file validation
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
       toast({
-        title: "Invalid file type",
-        description: "Please select an image file.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please select an image under 5MB.",
+        title: "Invalid file",
+        description: validation.error,
         variant: "destructive",
       });
       return;

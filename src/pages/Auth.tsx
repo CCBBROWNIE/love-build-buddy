@@ -6,12 +6,17 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, Mail, Lock, User, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { PasswordStrengthIndicator } from "@/components/PasswordStrengthIndicator";
+import { passwordSchema, emailSchema } from "@/lib/security";
+import { toast } from "sonner";
 
 const Auth = () => {
   const navigate = useNavigate();
   const { signIn, signUp } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -20,31 +25,73 @@ const Auth = () => {
     birthday: ""
   });
 
+  const validateEmail = (email: string) => {
+    const result = emailSchema.safeParse(email);
+    if (!result.success) {
+      setEmailError(result.error.errors[0].message);
+      return false;
+    }
+    setEmailError("");
+    return true;
+  };
+
+  const validatePassword = (password: string, isSignUp: boolean = false) => {
+    if (!isSignUp) return true; // Only validate on signup
+    
+    const result = passwordSchema.safeParse(password);
+    if (!result.success) {
+      setPasswordError(result.error.errors[0].message);
+      return false;
+    }
+    setPasswordError("");
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateEmail(formData.email)) return;
+    if (!isLogin && !validatePassword(formData.password, true)) return;
+    
+    if (!isLogin) {
+      if (!formData.firstName.trim() || !formData.lastName.trim()) {
+        toast.error("Please fill in all required fields");
+        return;
+      }
+      
+      if (!formData.birthday) {
+        toast.error("Please enter your birthday");
+        return;
+      }
+    }
+    
     setLoading(true);
 
     try {
       if (isLogin) {
         const { error } = await signIn(formData.email, formData.password);
-        if (!error) {
+        if (error) {
+          toast.error(error.message);
+        } else {
+          toast.success("Signed in successfully!");
           navigate("/feed");
         }
       } else {
-        if (!formData.firstName || !formData.lastName || !formData.birthday) {
-          return;
-        }
-        
         const { error } = await signUp(formData.email, formData.password, {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim(),
           birthday: new Date(formData.birthday)
         });
         
-        if (!error) {
-          navigate("/feed");
+        if (error) {
+          toast.error(error.message);
+        } else {
+          toast.success("Account created successfully! Please check your email for verification.");
+          // Don't navigate immediately - wait for email verification
         }
       }
+    } catch (error) {
+      toast.error("An unexpected error occurred");
     } finally {
       setLoading(false);
     }
@@ -115,9 +162,16 @@ const Auth = () => {
                 type="email"
                 placeholder="your@email.com"
                 value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, email: e.target.value }));
+                  if (emailError) validateEmail(e.target.value);
+                }}
                 required
+                className={emailError ? "border-red-500" : ""}
               />
+              {emailError && (
+                <p className="text-sm text-red-500">{emailError}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -127,10 +181,20 @@ const Auth = () => {
                 type="password"
                 placeholder="••••••••"
                 value={formData.password}
-                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                onChange={(e) => {
+                  setFormData(prev => ({ ...prev, password: e.target.value }));
+                  if (!isLogin && passwordError) validatePassword(e.target.value, true);
+                }}
                 required
-                minLength={6}
+                minLength={isLogin ? 1 : 8}
+                className={passwordError ? "border-red-500" : ""}
               />
+              {passwordError && (
+                <p className="text-sm text-red-500">{passwordError}</p>
+              )}
+              {!isLogin && formData.password && (
+                <PasswordStrengthIndicator password={formData.password} />
+              )}
             </div>
 
             <Button 
