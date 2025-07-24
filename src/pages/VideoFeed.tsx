@@ -367,6 +367,30 @@ const VideoFeed = () => {
             {/* Video Overlay */}
             <div className="absolute inset-0 bg-black/10 rounded-xl" />
 
+            {/* Profile Picture and Username - Left Corner */}
+            <div className="absolute bottom-32 left-4">
+              <div className="flex items-center">
+                <Avatar className="w-10 h-10 mr-3">
+                  <AvatarImage 
+                    src={video.profilePhotoUrl || undefined} 
+                    className="object-cover w-full h-full"
+                  />
+                  <AvatarFallback className="bg-white/20">
+                    <User className="w-5 h-5 text-white" />
+                  </AvatarFallback>
+                </Avatar>
+                <button
+                  onClick={() => {
+                    setSelectedUserId(video.userId);
+                    setSelectedUsername(video.username);
+                  }}
+                  className="text-white font-semibold text-base hover:text-white/80 transition-colors"
+                >
+                  {video.username}
+                </button>
+              </div>
+            </div>
+
             {/* Content Overlay */}
             <div className="absolute bottom-0 left-0 right-0 p-4 pb-24">
               <div className="flex items-end justify-between">
@@ -378,28 +402,6 @@ const VideoFeed = () => {
                     getCategoryColor(video.category)
                   )}>
                     {getCategoryText(video.category)}
-                  </div>
-
-                  {/* Username with Profile Picture */}
-                  <div className="flex items-center mb-2">
-                    <Avatar className="w-8 h-8 mr-2">
-                      <AvatarImage 
-                        src={video.profilePhotoUrl || undefined} 
-                        className="object-cover w-full h-full"
-                      />
-                      <AvatarFallback className="bg-white/20">
-                        <User className="w-4 h-4 text-white" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <button
-                      onClick={() => {
-                        setSelectedUserId(video.userId);
-                        setSelectedUsername(video.username);
-                      }}
-                      className="text-white font-semibold hover:text-white/80 transition-colors"
-                    >
-                      {video.username}
-                    </button>
                   </div>
 
                   {/* Title */}
