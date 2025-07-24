@@ -305,7 +305,7 @@ const Chat = () => {
           </div>
 
           {/* AI Input */}
-          <div className="px-4 pt-4 border-t border-border/50 glass backdrop-blur-lg">
+          <div className="px-4 border-t border-border/50 glass backdrop-blur-lg">
             <div className="max-w-4xl mx-auto">
               <div className="flex items-center space-x-3 mb-3">
                 <Button
