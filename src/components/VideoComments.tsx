@@ -3,9 +3,11 @@ import { MessageCircle, Send, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { UserProfile } from '@/components/UserProfile';
 
 interface Comment {
   id: string;
@@ -15,6 +17,7 @@ interface Comment {
   profiles?: {
     first_name: string;
     last_name: string;
+    profile_photo_url?: string;
   } | null;
 }
 
@@ -30,6 +33,8 @@ export const VideoComments = ({ videoId, isOpen, onClose }: VideoCommentsProps) 
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUsername, setSelectedUsername] = useState<string>('');
 
   useEffect(() => {
     if (isOpen) {
@@ -54,7 +59,7 @@ export const VideoComments = ({ videoId, isOpen, onClose }: VideoCommentsProps) 
       const userIds = [...new Set(commentsData?.map(c => c.user_id) || [])];
       const { data: profilesData } = await supabase
         .from('profiles')
-        .select('user_id, first_name, last_name')
+        .select('user_id, first_name, last_name, profile_photo_url')
         .in('user_id', userIds);
 
       const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
@@ -145,16 +150,26 @@ export const VideoComments = ({ videoId, isOpen, onClose }: VideoCommentsProps) 
               {comments.map((comment) => (
                 <div key={comment.id} className="space-y-2">
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                      <span className="text-primary-foreground text-sm font-medium">
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage 
+                        src={comment.profiles?.profile_photo_url || undefined}
+                        className="object-cover w-full h-full"
+                      />
+                      <AvatarFallback className="text-sm">
                         {comment.profiles?.first_name?.[0] || 'U'}
-                      </span>
-                    </div>
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">
+                        <button
+                          onClick={() => {
+                            setSelectedUserId(comment.user_id);
+                            setSelectedUsername(comment.profiles?.first_name?.toLowerCase() || 'user');
+                          }}
+                          className="font-medium text-sm text-primary hover:text-primary/80 transition-colors"
+                        >
                           @{comment.profiles?.first_name?.toLowerCase() || 'user'}
-                        </span>
+                        </button>
                         <span className="text-xs text-muted-foreground">
                           {formatTimeAgo(comment.created_at)}
                         </span>
@@ -190,6 +205,19 @@ export const VideoComments = ({ videoId, isOpen, onClose }: VideoCommentsProps) 
           </div>
         )}
       </div>
+
+      {/* User Profile Modal */}
+      {selectedUserId && (
+        <UserProfile
+          userId={selectedUserId}
+          username={selectedUsername}
+          isOpen={!!selectedUserId}
+          onClose={() => {
+            setSelectedUserId(null);
+            setSelectedUsername('');
+          }}
+        />
+      )}
     </div>
   );
 };
