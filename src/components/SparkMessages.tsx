@@ -29,6 +29,28 @@ const SparkMessages = () => {
   useEffect(() => {
     if (user) {
       loadSparkMessages();
+      
+      // Set up real-time subscription for match updates
+      const channel = supabase
+        .channel('matches_updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'matches',
+            filter: `or(user1_id.eq.${user.id},user2_id.eq.${user.id})`
+          },
+          () => {
+            // Reload spark messages when a match is updated
+            loadSparkMessages();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user]);
 
@@ -36,13 +58,15 @@ const SparkMessages = () => {
     if (!user) return;
 
     try {
-      // Get accepted matches where both users confirmed
+      // Get accepted matches where both users confirmed OR where current user confirmed
+      // This allows matches to appear immediately after current user accepts
       const { data: matches, error } = await supabase
         .from('matches')
         .select('*')
         .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
-        .eq('user1_confirmed', true)
-        .eq('user2_confirmed', true);
+        .or(
+          `and(user1_id.eq.${user.id},user1_confirmed.eq.true),and(user2_id.eq.${user.id},user2_confirmed.eq.true),and(user1_confirmed.eq.true,user2_confirmed.eq.true)`
+        );
 
       if (error) throw error;
 
