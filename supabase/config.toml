@@ -35,7 +35,7 @@ verify_jwt = false
 [edge_functions.memory-processor]
 verify_jwt = false
 
-[edge_functions.simple-memory-saver]
+[edge_functions.face-verification]
 verify_jwt = false
 
 [storage]

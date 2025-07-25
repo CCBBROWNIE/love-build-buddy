@@ -54,35 +54,42 @@ serve(async (req) => {
     }
 
     console.log('Comparing images for user:', userId);
+    console.log('Profile photo URL:', profile.profile_photo_url);
+    console.log('Verification selfie URL:', profile.verification_selfie_url);
 
     // Fetch both images and convert to base64
-    const [profileImageResponse, selfieImageResponse] = await Promise.all([
-      fetch(profile.profile_photo_url),
-      fetch(profile.verification_selfie_url)
-    ]);
+    try {
+      const [profileImageResponse, selfieImageResponse] = await Promise.all([
+        fetch(profile.profile_photo_url),
+        fetch(profile.verification_selfie_url)
+      ]);
 
-    if (!profileImageResponse.ok || !selfieImageResponse.ok) {
-      throw new Error('Failed to fetch images for comparison');
-    }
+      console.log('Profile image response status:', profileImageResponse.status);
+      console.log('Selfie image response status:', selfieImageResponse.status);
 
-    const profileImageBuffer = await profileImageResponse.arrayBuffer();
-    const selfieImageBuffer = await selfieImageResponse.arrayBuffer();
+      if (!profileImageResponse.ok || !selfieImageResponse.ok) {
+        throw new Error(`Failed to fetch images: Profile ${profileImageResponse.status}, Selfie ${selfieImageResponse.status}`);
+      }
 
-    const profileImageBase64 = btoa(String.fromCharCode(...new Uint8Array(profileImageBuffer)));
-    const selfieImageBase64 = btoa(String.fromCharCode(...new Uint8Array(selfieImageBuffer)));
+      const profileImageBuffer = await profileImageResponse.arrayBuffer();
+      const selfieImageBuffer = await selfieImageResponse.arrayBuffer();
 
-    // Get content types
-    const profileContentType = profileImageResponse.headers.get('content-type') || 'image/jpeg';
-    const selfieContentType = selfieImageResponse.headers.get('content-type') || 'image/jpeg';
+      console.log('Profile image size:', profileImageBuffer.byteLength);
+      console.log('Selfie image size:', selfieImageBuffer.byteLength);
 
-    // Use OpenAI's vision model to compare the two images
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+      // Convert to base64
+      const profileImageBase64 = btoa(String.fromCharCode(...new Uint8Array(profileImageBuffer)));
+      const selfieImageBase64 = btoa(String.fromCharCode(...new Uint8Array(selfieImageBuffer)));
+
+      // Get content types
+      const profileContentType = profileImageResponse.headers.get('content-type') || 'image/jpeg';
+      const selfieContentType = selfieImageResponse.headers.get('content-type') || 'image/jpeg';
+
+      console.log('Profile content type:', profileContentType);
+      console.log('Selfie content type:', selfieContentType);
+
+      // Use OpenAI's vision model to compare the two images
+      const requestBody = {
         model: 'gpt-4o',
         messages: [
           {
@@ -94,7 +101,7 @@ serve(async (req) => {
             - "confidence": number between 0-100 (confidence percentage)
             - "reasoning": string (brief explanation of your decision)
             
-            Be very careful and conservative. Only return true if you are highly confident it's the same person. Consider factors like facial structure, eye shape, nose, mouth, and overall facial geometry.`
+            Be very careful and conservative. Only return true if you are highly confident it's the same person.`
           },
           {
             role: 'user',
@@ -120,55 +127,72 @@ serve(async (req) => {
         ],
         max_tokens: 300,
         temperature: 0.1
-      }),
-    });
+      };
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenAI API error details:', errorText);
-      throw new Error(`OpenAI API error: ${response.status} ${response.statusText} - ${errorText}`);
-    }
+      console.log('Making OpenAI request...');
+      
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
 
-    const data = await response.json();
-    const result = data.choices[0].message.content;
-    
-    console.log('OpenAI response:', result);
+      console.log('OpenAI response status:', response.status);
 
-    // Parse the JSON response from OpenAI
-    let verificationResult;
-    try {
-      verificationResult = JSON.parse(result);
-    } catch (e) {
-      throw new Error('Failed to parse verification result');
-    }
-
-    // Only mark as verified if it's a high-confidence match
-    const isVerified = verificationResult.match && verificationResult.confidence >= 80;
-
-    if (isVerified) {
-      // Update the user's verification status
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ is_verified: true })
-        .eq('user_id', userId);
-
-      if (updateError) {
-        console.error('Error updating verification status:', updateError);
-        throw updateError;
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('OpenAI API error details:', errorText);
+        throw new Error(`OpenAI API error: ${response.status} ${response.statusText} - ${errorText}`);
       }
 
-      console.log('User successfully verified:', userId);
-    }
+      const data = await response.json();
+      const result = data.choices[0].message.content;
+      
+      console.log('OpenAI response:', result);
 
-    return new Response(
-      JSON.stringify({
-        verified: isVerified,
-        confidence: verificationResult.confidence,
-        reasoning: verificationResult.reasoning,
-        match: verificationResult.match
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      // Parse the JSON response from OpenAI
+      let verificationResult;
+      try {
+        verificationResult = JSON.parse(result);
+      } catch (e) {
+        throw new Error('Failed to parse verification result');
+      }
+
+      // Only mark as verified if it's a high-confidence match
+      const isVerified = verificationResult.match && verificationResult.confidence >= 80;
+
+      if (isVerified) {
+        // Update the user's verification status
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ is_verified: true })
+          .eq('user_id', userId);
+
+        if (updateError) {
+          console.error('Error updating verification status:', updateError);
+          throw updateError;
+        }
+
+        console.log('User successfully verified:', userId);
+      }
+
+      return new Response(
+        JSON.stringify({
+          verified: isVerified,
+          confidence: verificationResult.confidence,
+          reasoning: verificationResult.reasoning,
+          match: verificationResult.match
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+      
+    } catch (imageError) {
+      console.error('Error processing images:', imageError);
+      throw imageError;
+    }
 
   } catch (error) {
     console.error('Face verification error:', error);
