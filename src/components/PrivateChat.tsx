@@ -184,7 +184,7 @@ export default function PrivateChat() {
   
 
   useEffect(() => {
-    const currentConversationId = conversationId || conversation?.id;
+    const currentConversationId = conversation?.id;
     if (!currentConversationId) return;
 
     // Set up real-time subscription for new messages
@@ -239,7 +239,8 @@ export default function PrivateChat() {
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    const currentConversationId = conversationId || conversation?.id;
+    // Use conversation?.id for existing conversations, not the URL param if it's "new"
+    const currentConversationId = conversation?.id;
     console.log('Send message clicked!');
     console.log('Current conversation ID:', currentConversationId);
     console.log('Message content:', newMessage);
