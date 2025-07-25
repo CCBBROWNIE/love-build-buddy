@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Camera, Upload, Shield, Check } from 'lucide-react';
+import CameraModal from './CameraModal';
 
 interface VerificationSelfieProps {
   onSelfieUploaded: (url: string) => void;
@@ -16,12 +17,12 @@ export function VerificationSelfie({ onSelfieUploaded, currentSelfieUrl, onVerif
   const [uploading, setUploading] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentSelfieUrl || null);
+  const [showCameraModal, setShowCameraModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleFileUpload = async (file: File) => {
     if (!file || !user) return;
 
     // Validate file type
@@ -52,7 +53,7 @@ export function VerificationSelfie({ onSelfieUploaded, currentSelfieUrl, onVerif
       setPreviewUrl(preview);
 
       // Upload to Supabase Storage
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split('.').pop() || 'jpg';
       const fileName = `${user.id}/verification-${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
@@ -95,6 +96,17 @@ export function VerificationSelfie({ onSelfieUploaded, currentSelfieUrl, onVerif
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      await handleFileUpload(file);
+    }
+  };
+
+  const handleCameraCapture = async (file: File) => {
+    await handleFileUpload(file);
   };
 
   const handleVerifyIdentity = async () => {
@@ -180,16 +192,28 @@ export function VerificationSelfie({ onSelfieUploaded, currentSelfieUrl, onVerif
             )}
           </div>
 
-          {/* Upload Button */}
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            variant="outline"
-            className="w-full"
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            {uploading ? 'Uploading...' : currentSelfieUrl ? 'Retake Selfie' : 'Take Verification Selfie'}
-          </Button>
+          {/* Camera and Upload Buttons */}
+          <div className="flex gap-2 w-full">
+            <Button
+              onClick={() => setShowCameraModal(true)}
+              disabled={uploading}
+              variant="default"
+              className="flex-1"
+            >
+              <Camera className="w-4 h-4 mr-2" />
+              {uploading ? 'Uploading...' : 'Take Selfie'}
+            </Button>
+            
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              variant="outline"
+              className="flex-1"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Upload Photo
+            </Button>
+          </div>
 
           {/* Verify Button */}
           {currentSelfieUrl && (
@@ -207,7 +231,6 @@ export function VerificationSelfie({ onSelfieUploaded, currentSelfieUrl, onVerif
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            capture="user"
             onChange={handleFileSelect}
             className="hidden"
           />
@@ -218,6 +241,12 @@ export function VerificationSelfie({ onSelfieUploaded, currentSelfieUrl, onVerif
           </div>
         </div>
       </CardContent>
+      
+      <CameraModal
+        isOpen={showCameraModal}
+        onClose={() => setShowCameraModal(false)}
+        onCapture={handleCameraCapture}
+      />
     </Card>
   );
 }
