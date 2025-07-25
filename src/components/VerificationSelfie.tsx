@@ -133,12 +133,20 @@ export function VerificationSelfie({ onSelfieUploaded, currentSelfieUrl, onVerif
         return;
       }
 
+      console.log('Starting verification for user:', user.id);
+      
       // Call our face verification edge function
+      console.log('Calling face-verification function...');
       const { data, error } = await supabase.functions.invoke('face-verification', {
         body: { userId: user.id }
       });
       
-      if (error) throw error;
+      console.log('Face verification response:', { data, error });
+      
+      if (error) {
+        console.error('Face verification error:', error);
+        throw error;
+      }
       
       if (data.verified) {
         toast({
