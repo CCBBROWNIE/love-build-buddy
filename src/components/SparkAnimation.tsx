@@ -22,36 +22,36 @@ const SparkAnimation = ({ onComplete }: SparkAnimationProps) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="relative">
-        {/* Main sparkles logo - same as MeetCute AI but bigger */}
+        {/* Main sparkles logo - bigger and slower animation */}
         <div className="relative w-32 h-32 flex items-center justify-center">
-          <Sparkles className="w-24 h-24 text-spark animate-spin" />
-          <div className="absolute inset-0 bg-gradient-to-r from-spark to-coral rounded-full opacity-30 animate-pulse"></div>
+          <Sparkles className="w-24 h-24 text-spark" style={{ animation: 'spin 4s linear infinite' }} />
+          <div className="absolute inset-0 bg-gradient-to-r from-spark to-coral rounded-full opacity-30" style={{ animation: 'pulse 4s ease-in-out infinite' }}></div>
         </div>
 
-        {/* Flying sparks in spark color */}
+        {/* Flying sparks in spark color - slower animations */}
         {Array.from({ length: 8 }).map((_, i) => (
           <div
             key={i}
-            className="absolute w-3 h-3 bg-spark rounded-full animate-ping shadow-glow"
+            className="absolute w-3 h-3 bg-spark rounded-full shadow-glow"
             style={{
               top: `${50 + 35 * Math.cos((i * Math.PI) / 4)}%`,
               left: `${50 + 35 * Math.sin((i * Math.PI) / 4)}%`,
-              animationDelay: `${i * 0.1}s`,
-              animationDuration: '0.8s',
+              animation: `ping 4s ease-in-out infinite`,
+              animationDelay: `${i * 0.5}s`,
             }}
           />
         ))}
 
-        {/* Outer ring of smaller sparks in coral color */}
+        {/* Outer ring of smaller sparks in coral color - slower animations */}
         {Array.from({ length: 12 }).map((_, i) => (
           <div
             key={`outer-${i}`}
-            className="absolute w-2 h-2 bg-coral rounded-full animate-bounce shadow-soft"
+            className="absolute w-2 h-2 bg-coral rounded-full shadow-soft"
             style={{
               top: `${50 + 45 * Math.cos((i * Math.PI) / 6)}%`,
               left: `${50 + 45 * Math.sin((i * Math.PI) / 6)}%`,
-              animationDelay: `${i * 0.05}s`,
-              animationDuration: '1s',
+              animation: `bounce 4s ease-in-out infinite`,
+              animationDelay: `${i * 0.33}s`,
             }}
           />
         ))}
