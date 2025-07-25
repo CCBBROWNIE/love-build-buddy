@@ -36,7 +36,7 @@ interface Conversation {
 export default function PrivateChat() {
   const { conversationId, userId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -48,7 +48,10 @@ export default function PrivateChat() {
   const otherParticipant = conversation?.participants.find(p => p.user_id !== user?.id);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !session) {
+      console.log('Missing auth:', { user: !!user, session: !!session });
+      return;
+    }
 
     const initializeConversation = async () => {
       try {
