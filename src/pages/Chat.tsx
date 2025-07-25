@@ -184,7 +184,7 @@ const Chat = () => {
   };
 
   return (
-    <div className="h-screen bg-gradient-subtle flex flex-col pb-20"> {/* Added pb-20 for navigation space */}
+    <div className="h-screen bg-gradient-subtle flex flex-col"> {/* Removed pb-20 */}
       {/* Header */}
       <div className="glass border-b backdrop-blur-lg p-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -307,7 +307,7 @@ const Chat = () => {
             </div>
 
             {/* AI Input - Fixed at bottom */}
-            <div className="border-t border-border/50 glass backdrop-blur-lg p-4">
+            <div className="border-t border-border/50 glass backdrop-blur-lg p-4 mb-20"> {/* Added mb-20 for space above navigation */}
               <div className="flex items-center space-x-3">
                 <Button
                   variant="outline"
