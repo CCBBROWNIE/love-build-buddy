@@ -35,10 +35,9 @@ const AppContent = () => {
         <Route path="/feed" element={<ProtectedRoute><VideoFeed /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+        <Route path="/chat/:conversationId" element={<ProtectedRoute><PrivateChat /></ProtectedRoute>} />
         <Route path="/memories" element={<ProtectedRoute><Memories /></ProtectedRoute>} />
         <Route path="/matches" element={<ProtectedRoute><Matches /></ProtectedRoute>} />
-        <Route path="/private-chat/:conversationId" element={<ProtectedRoute><PrivateChat /></ProtectedRoute>} />
-        <Route path="/private-chat/new/:userId" element={<ProtectedRoute><PrivateChat /></ProtectedRoute>} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>

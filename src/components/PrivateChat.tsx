@@ -101,7 +101,7 @@ export default function PrivateChat() {
       }
 
       console.log('Added participants successfully');
-      navigate(`/private-chat/${newConversation.id}`, { replace: true });
+      navigate(`/chat/${newConversation.id}`, { replace: true });
       
     } catch (error: any) {
       console.error('Error in createConversationNow:', error);
@@ -304,7 +304,7 @@ export default function PrivateChat() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate('/feed')}
+              onClick={() => navigate('/chat')}
               className="mr-4"
             >
               <ArrowLeft className="w-4 h-4" />
