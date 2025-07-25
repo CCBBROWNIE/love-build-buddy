@@ -57,27 +57,46 @@ export default function PrivateChat() {
         // If no conversationId but we have a userId, create or find conversation
         if (!conversationId && userId) {
           // Check if conversation already exists between these users
-          const { data: existingConversation } = await supabase
-            .from('conversations')
-            .select(`
-              id,
-              conversation_participants!inner (user_id)
-            `)
-            .eq('conversation_participants.user_id', user.id)
-            .contains('conversation_participants', [{ user_id: userId }]);
+          console.log('Looking for existing conversation between:', user.id, 'and', userId);
+          
+          const { data: userParticipations } = await supabase
+            .from('conversation_participants')
+            .select('conversation_id')
+            .eq('user_id', user.id);
 
-          if (existingConversation && existingConversation.length > 0) {
-            currentConversationId = existingConversation[0].id;
+          const { data: otherUserParticipations } = await supabase
+            .from('conversation_participants')
+            .select('conversation_id')
+            .eq('user_id', userId);
+
+          // Find common conversation IDs
+          const userConversationIds = userParticipations?.map(p => p.conversation_id) || [];
+          const otherUserConversationIds = otherUserParticipations?.map(p => p.conversation_id) || [];
+          const commonConversationIds = userConversationIds.filter(id => 
+            otherUserConversationIds.includes(id)
+          );
+
+          console.log('Common conversation IDs:', commonConversationIds);
+
+          if (commonConversationIds.length > 0) {
+            currentConversationId = commonConversationIds[0];
+            console.log('Found existing conversation:', currentConversationId);
             navigate(`/private-chat/${currentConversationId}`, { replace: true });
           } else {
             // Create new conversation
+            console.log('Creating new conversation...');
             const { data: newConversation, error: conversationError } = await supabase
               .from('conversations')
               .insert({})
               .select()
               .single();
 
-            if (conversationError) throw conversationError;
+            if (conversationError) {
+              console.error('Error creating conversation:', conversationError);
+              throw conversationError;
+            }
+
+            console.log('Created conversation:', newConversation.id);
 
             // Add participants
             const { error: participantsError } = await supabase
@@ -87,8 +106,12 @@ export default function PrivateChat() {
                 { conversation_id: newConversation.id, user_id: userId }
               ]);
 
-            if (participantsError) throw participantsError;
+            if (participantsError) {
+              console.error('Error adding participants:', participantsError);
+              throw participantsError;
+            }
 
+            console.log('Added participants successfully');
             currentConversationId = newConversation.id;
             navigate(`/private-chat/${currentConversationId}`, { replace: true });
           }
@@ -217,10 +240,25 @@ export default function PrivateChat() {
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     const currentConversationId = conversationId || conversation?.id;
-    if (!newMessage.trim() || !user || !currentConversationId || sending) return;
+    console.log('Send message clicked!');
+    console.log('Current conversation ID:', currentConversationId);
+    console.log('Message content:', newMessage);
+    console.log('User:', user?.id);
+    console.log('Sending state:', sending);
+    
+    if (!newMessage.trim() || !user || !currentConversationId || sending) {
+      console.log('Send message blocked:', {
+        hasMessage: !!newMessage.trim(),
+        hasUser: !!user,
+        hasConversation: !!currentConversationId,
+        notSending: !sending
+      });
+      return;
+    }
 
     setSending(true);
     try {
+      console.log('Attempting to send message...');
       const { error } = await supabase
         .from('messages')
         .insert({
@@ -229,10 +267,15 @@ export default function PrivateChat() {
           content: newMessage.trim()
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
+      console.log('Message sent successfully!');
       setNewMessage('');
     } catch (error: any) {
+      console.error('Error sending message:', error);
       toast({
         title: "Error",
         description: error.message,
