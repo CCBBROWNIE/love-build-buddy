@@ -184,9 +184,9 @@ const Chat = () => {
   };
 
   return (
-    <div className="h-screen bg-gradient-subtle flex flex-col relative">
+    <div className="h-screen bg-gradient-subtle flex flex-col">
       {/* Header */}
-      <div className="glass border-b backdrop-blur-lg p-4 sticky top-0 z-40">
+      <div className="glass border-b backdrop-blur-lg p-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="ai" className="flex items-center gap-2">
@@ -245,68 +245,69 @@ const Chat = () => {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <TabsContent value="ai" className="flex-1 flex flex-col m-0">
-          {/* AI Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-32">{/* Added pb-32 for bottom padding */}
-            {messages.map((message, index) => (
-              <div
-                key={message.id}
-                className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"} animate-fade-in`}
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className={`max-w-[85%] ${message.sender === "user" ? "order-2" : "order-1"}`}>
-                  {message.sender === "ai" && (
-                    <div className="flex items-center space-x-2 mb-2 animate-slide-in-left">
-                      <Sparkles className="w-4 h-4 text-spark animate-spark-pulse" />
-                      <span className="text-sm font-medium text-foreground">MeetCute</span>
-                    </div>
-                  )}
-                  
-                  <Card className={`${
-                    message.sender === "user" 
-                      ? "bg-gradient-to-r from-spark to-coral text-midnight shadow-warm" 
-                      : "bg-card/80 backdrop-blur-sm border-border/50 shadow-soft"
-                  } ${message.typing ? "animate-pulse" : "hover:shadow-elegant transition-all duration-300"}`}>
-                    <CardContent className="p-4">
-                      <p className={`text-sm whitespace-pre-wrap leading-relaxed ${
-                        message.sender === "user" ? "text-midnight font-medium" : "text-foreground"
-                      }`}>
-                        {message.text}
-                      </p>
-                      <p className={`text-xs mt-2 ${
-                        message.sender === "user" 
-                          ? "text-midnight/70" 
-                          : "text-muted-foreground"
-                      }`}>
-                        {message.timestamp.toLocaleTimeString([], { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-            ))}
-            
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="max-w-[80%]">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Sparkles className="w-4 h-4 text-spark animate-spin" />
-                    <span className="text-sm font-medium text-black">MeetCute is thinking...</span>
+      {/* Content Area - Flexible */}
+      <div className="flex-1 flex flex-col min-h-0">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+          <TabsContent value="ai" className="flex-1 flex flex-col m-0">
+            {/* AI Messages - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+              {messages.map((message, index) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"} animate-fade-in`}
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div className={`max-w-[85%] ${message.sender === "user" ? "order-2" : "order-1"}`}>
+                    {message.sender === "ai" && (
+                      <div className="flex items-center space-x-2 mb-2 animate-slide-in-left">
+                        <Sparkles className="w-4 h-4 text-spark animate-spark-pulse" />
+                        <span className="text-sm font-medium text-foreground">MeetCute</span>
+                      </div>
+                    )}
+                    
+                    <Card className={`${
+                      message.sender === "user" 
+                        ? "bg-gradient-to-r from-spark to-coral text-midnight shadow-warm" 
+                        : "bg-card/80 backdrop-blur-sm border-border/50 shadow-soft"
+                    } ${message.typing ? "animate-pulse" : "hover:shadow-elegant transition-all duration-300"}`}>
+                      <CardContent className="p-4">
+                        <p className={`text-sm whitespace-pre-wrap leading-relaxed ${
+                          message.sender === "user" ? "text-midnight font-medium" : "text-foreground"
+                        }`}>
+                          {message.text}
+                        </p>
+                        <p className={`text-xs mt-2 ${
+                          message.sender === "user" 
+                            ? "text-midnight/70" 
+                            : "text-muted-foreground"
+                        }`}>
+                          {message.timestamp.toLocaleTimeString([], { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </p>
+                      </CardContent>
+                    </Card>
                   </div>
                 </div>
-              </div>
-            )}
-            
-            <div ref={messagesEndRef} />
-          </div>
+              ))}
+              
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="max-w-[80%]">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Sparkles className="w-4 h-4 text-spark animate-spin" />
+                      <span className="text-sm font-medium text-black">MeetCute is thinking...</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
+            </div>
 
-          {/* AI Input */}
-          <div className="absolute bottom-20 left-0 right-0 px-4 py-3 border-t border-border/50 glass backdrop-blur-lg">
-            <div className="max-w-4xl mx-auto">
+            {/* AI Input - Fixed at bottom */}
+            <div className="border-t border-border/50 glass backdrop-blur-lg p-4">
               <div className="flex items-center space-x-3">
                 <Button
                   variant="outline"
@@ -350,28 +351,28 @@ const Chat = () => {
                 </p>
               </div>
             </div>
-          </div>
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="messages" className="flex-1 flex flex-col m-0">
-          {/* Private Messages Content */}
-          <div className="flex-1 flex items-center justify-center p-8">
-            <div className="text-center max-w-md">
-              <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <MessageCircle className="w-10 h-10 text-primary" />
-              </div>
-              <h2 className="text-2xl font-bold mb-4">Private Messages</h2>
-              <p className="text-muted-foreground mb-6">
-                Don't worry, people can only find your profile through the feed if you comment or post.
-              </p>
-              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <Users className="w-4 h-4" />
-                <span>No messages yet</span>
+          <TabsContent value="messages" className="flex-1 flex flex-col m-0">
+            {/* Private Messages Content */}
+            <div className="flex-1 flex items-center justify-center p-8">
+              <div className="text-center max-w-md">
+                <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <MessageCircle className="w-10 h-10 text-primary" />
+                </div>
+                <h2 className="text-2xl font-bold mb-4">Private Messages</h2>
+                <p className="text-muted-foreground mb-6">
+                  Don't worry, people can only find your profile through the feed if you comment or post.
+                </p>
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <Users className="w-4 h-4" />
+                  <span>No messages yet</span>
+                </div>
               </div>
             </div>
-          </div>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 };
