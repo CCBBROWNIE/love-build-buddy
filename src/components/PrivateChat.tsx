@@ -85,6 +85,11 @@ export default function PrivateChat() {
           } else {
             // Create new conversation
             console.log('Creating new conversation...');
+            
+            // Debug: Check authentication state
+            const { data: authData } = await supabase.auth.getUser();
+            console.log('Auth state:', { user: authData.user?.id, email: authData.user?.email });
+            
             const { data: newConversation, error: conversationError } = await supabase
               .from('conversations')
               .insert({})
