@@ -151,10 +151,10 @@ const Matches = () => {
       const otherUserId = isUser1 ? match.user2_id : match.user1_id;
 
       if (accept) {
-        // Show spark animation
+        // Show spark animation FIRST
         setShowSparkAnimation(true);
 
-        // Update match
+        // Update match immediately
         const { error } = await supabase
           .from('matches')
           .update({ [updateField]: accept })
@@ -165,23 +165,36 @@ const Matches = () => {
         // Remove the match from the list
         setMatches(prev => prev.filter(m => m.id !== matchId));
 
-        // Create conversation and navigate to spark messages after animation
-        const conversationId = await createConversation(otherUserId);
-        
-        setTimeout(() => {
-          setShowSparkAnimation(false);
-          navigate('/chat', { replace: true });
-          // Small delay to ensure navigation completes before changing tab
-          setTimeout(() => {
-            // Trigger tab change to sparks - we'll need to pass this via state or context
-            window.dispatchEvent(new CustomEvent('openSparkMessages'));
-          }, 100);
-        }, 4000); // Match the 4-second animation duration
-
+        // Show success toast
         toast({
           title: "Match accepted!",
-          description: "Starting your conversation...",
+          description: "Get ready for your celebration...",
         });
+
+        // WAIT for 4-second animation to complete, THEN create conversation and navigate
+        setTimeout(async () => {
+          try {
+            // Create conversation AFTER animation completes
+            await createConversation(otherUserId);
+            
+            // Hide animation and navigate
+            setShowSparkAnimation(false);
+            navigate('/chat', { replace: true });
+            
+            // Small delay to ensure navigation completes before changing tab
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('openSparkMessages'));
+            }, 100);
+          } catch (error) {
+            console.error('Error creating conversation after animation:', error);
+            setShowSparkAnimation(false);
+            toast({
+              title: "Connection Error",
+              description: "Celebration complete, but couldn't create chat. Please try again.",
+              variant: "destructive"
+            });
+          }
+        }, 4000); // Wait for full 4-second animation
       } else {
         // For decline, just update without animation
         const { error } = await supabase
