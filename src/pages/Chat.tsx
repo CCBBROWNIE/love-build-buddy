@@ -248,7 +248,7 @@ const Chat = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
         <TabsContent value="ai" className="flex-1 flex flex-col m-0">
           {/* AI Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-32">{/* Added pb-32 for bottom padding */}
             {messages.map((message, index) => (
               <div
                 key={message.id}
