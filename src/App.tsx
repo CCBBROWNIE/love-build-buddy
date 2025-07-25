@@ -12,6 +12,7 @@ import Memories from "./pages/Memories";
 import Matches from "./pages/Matches";
 import Profile from "./pages/Profile";
 import VideoFeed from "./pages/VideoFeed";
+import PrivateChat from "./components/PrivateChat";
 import NotFound from "./pages/NotFound";
 import Navigation from "./components/Navigation";
 import { AuthProvider } from "./hooks/useAuth";
@@ -36,6 +37,8 @@ const AppContent = () => {
         <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
         <Route path="/memories" element={<ProtectedRoute><Memories /></ProtectedRoute>} />
         <Route path="/matches" element={<ProtectedRoute><Matches /></ProtectedRoute>} />
+        <Route path="/private-chat/:conversationId" element={<ProtectedRoute><PrivateChat /></ProtectedRoute>} />
+        <Route path="/private-chat/new/:userId" element={<ProtectedRoute><PrivateChat /></ProtectedRoute>} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>

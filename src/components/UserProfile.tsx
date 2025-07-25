@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -40,6 +41,7 @@ export function UserProfile({ userId, username, isOpen, onClose }: UserProfilePr
   const [videos, setVideos] = useState<UserVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isOpen && userId) {
@@ -87,10 +89,8 @@ export function UserProfile({ userId, username, isOpen, onClose }: UserProfilePr
   };
 
   const handleMessage = () => {
-    toast({
-      title: "Messaging",
-      description: "Private messaging coming soon!",
-    });
+    onClose(); // Close the profile modal
+    navigate(`/private-chat/new/${userId}`); // Navigate to create new conversation with this user
   };
 
   const getCategoryColor = (category: string) => {
