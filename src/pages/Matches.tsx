@@ -315,7 +315,7 @@ const Matches = () => {
                   <div className="flex items-center">
                     <MapPin className="w-3 h-3 mr-1" />
                     {/* Extract location from match reason since we can't access other user's memory due to RLS */}
-                    {match.match_reason.includes('SoCo Apartments') || match.match_reason.includes('Coco Apartments') ? 'SoCo Apartments, Napa' : 'Location from match context'}
+                    {match.match_reason.includes('SoCo Apartments') ? 'SoCo Apartments, Napa' : 'Location from match context'}
                   </div>
                   <div className="flex items-center">
                     <Clock className="w-3 h-3 mr-1" />
