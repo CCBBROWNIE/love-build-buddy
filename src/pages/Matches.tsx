@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Heart, X, Clock, MapPin, Sparkles, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,6 +29,7 @@ interface Match {
   other_user: {
     first_name: string;
     last_name: string;
+    profile_photo_url: string | null;
   };
 }
 
@@ -67,7 +69,7 @@ const Matches = () => {
           // Get other user's profile
           const { data: profileData } = await supabase
             .from('profiles')
-            .select('first_name, last_name')
+            .select('first_name, last_name, profile_photo_url')
             .eq('user_id', otherUserId)
             .single();
 
@@ -81,7 +83,8 @@ const Matches = () => {
             },
             other_user: profileData || {
               first_name: 'Unknown',
-              last_name: 'User'
+              last_name: 'User',
+              profile_photo_url: null
             }
           };
         })
@@ -173,15 +176,33 @@ const Matches = () => {
           matches.map((match) => (
             <Card key={match.id} className="w-full">
               <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Badge variant="secondary" className="bg-gradient-to-r from-spark/20 to-coral/20">
-                      <Sparkles className="w-3 h-3 mr-1" />
-                      {Math.round(match.confidence_score * 100)}% Match
-                    </Badge>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <User className="w-3 h-3 mr-1" />
-                      {match.other_user.first_name} {match.other_user.last_name}
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start space-x-4">
+                    {/* Large Profile Photo */}
+                    <div className="flex-shrink-0">
+                      <Avatar className="w-20 h-20 border-2 border-border">
+                        <AvatarImage 
+                          src={match.other_user.profile_photo_url || undefined} 
+                          alt={`${match.other_user.first_name} ${match.other_user.last_name}`}
+                          className="object-cover"
+                        />
+                        <AvatarFallback className="text-lg font-semibold">
+                          {match.other_user.first_name[0]}{match.other_user.last_name[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                    
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Badge variant="secondary" className="bg-gradient-to-r from-spark/20 to-coral/20">
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          {Math.round(match.confidence_score * 100)}% Match
+                        </Badge>
+                      </div>
+                      <div className="flex items-center text-lg font-semibold">
+                        <User className="w-4 h-4 mr-2" />
+                        {match.other_user.first_name} {match.other_user.last_name}
+                      </div>
                     </div>
                   </div>
                   <div className="text-xs text-muted-foreground">
