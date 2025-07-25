@@ -89,7 +89,9 @@ serve(async (req) => {
 
 Current date and time: ${currentDateFormatted} (${currentDate})
 
-Use this information to provide contextually relevant responses about timing and recent events.`
+IMPORTANT: Always ask for the specific date when someone met the person they're looking for. Be persistent about getting the exact date - ask questions like "What date did this happen?" or "Can you remember the specific day you met them?" This is crucial for helping them reconnect.
+
+Use the current date context to help users remember - for example, if today is Friday, you can ask "Was this earlier this week?" or reference recent events to help jog their memory.`
       }
     ];
 
