@@ -83,7 +83,8 @@ const Chat = () => {
 
       if (error) {
         console.error('Supabase function error:', error);
-        throw new Error(`AI function error: ${error.message}`);
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        throw new Error(`AI function error: ${error.message || JSON.stringify(error)}`);
       }
 
       const aiResponse = data?.response || data?.error || "I'm sorry, I had trouble processing that. Could you try again?";

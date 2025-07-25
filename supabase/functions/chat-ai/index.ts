@@ -14,10 +14,24 @@ serve(async (req) => {
 
   try {
     console.log("=== CHAT-AI FUNCTION DEBUG START ===");
-    const { message, conversationHistory, userId } = await req.json();
+    console.log("Request method:", req.method);
+    console.log("Request headers:", Object.fromEntries(req.headers.entries()));
+    
+    const rawBody = await req.text();
+    console.log("Raw request body:", rawBody);
+    
+    let parsedBody;
+    try {
+      parsedBody = JSON.parse(rawBody);
+    } catch (parseError) {
+      console.error("JSON parse error:", parseError);
+      throw new Error(`Invalid JSON in request body: ${parseError.message}`);
+    }
+    
+    const { message, conversationHistory, userId } = parsedBody;
     console.log("Received message:", message);
     console.log("User ID:", userId);
-    console.log("Conversation history:", conversationHistory);
+    console.log("Conversation history length:", conversationHistory?.length || 0);
     
     const apiKey = Deno.env.get('OPENAI_API_KEY');
     console.log("API key exists:", !!apiKey);
