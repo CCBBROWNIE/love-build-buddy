@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Heart, X, Clock, MapPin, Sparkles, User } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Heart, X, Clock, MapPin, Sparkles, User, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import SparkAnimation from "@/components/SparkAnimation";
+import SparkMessages from "@/components/SparkMessages";
 
 interface Match {
   id: string;
@@ -39,9 +41,31 @@ const Matches = () => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSparkAnimation, setShowSparkAnimation] = useState(false);
+  const [activeTab, setActiveTab] = useState("matches");
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Handle navigation state for directing to specific tab
+  useEffect(() => {
+    const state = location.state as { activeTab?: string };
+    if (state?.activeTab && (state.activeTab === "matches" || state.activeTab === "sparks")) {
+      setActiveTab(state.activeTab);
+      // Clear the state to prevent unwanted tab switches
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location, navigate]);
+
+  // Listen for custom event to open spark messages (redirected from Chat navigation)
+  useEffect(() => {
+    const handleOpenSparkMessages = () => {
+      setActiveTab("sparks");
+    };
+
+    window.addEventListener('openSparkMessages', handleOpenSparkMessages);
+    return () => window.removeEventListener('openSparkMessages', handleOpenSparkMessages);
+  }, []);
 
   const loadMatches = async () => {
     if (!user) return;
@@ -187,13 +211,13 @@ const Matches = () => {
             // Create conversation AFTER animation completes
             await createConversation(otherUserId);
             
-            // Hide animation and navigate
+            // Hide animation and navigate to matches tab with sparks active
             setShowSparkAnimation(false);
-            navigate('/chat', { replace: true });
+            setActiveTab("sparks");
             
-            // Small delay to ensure navigation completes before changing tab
+            // Small delay to ensure tab switch completes
             setTimeout(() => {
-              window.dispatchEvent(new CustomEvent('openSparkMessages'));
+              // Remove the custom event since we're now handling this internally
             }, 100);
           } catch (error) {
             console.error('Error creating conversation after animation:', error);
@@ -248,124 +272,157 @@ const Matches = () => {
     <>
       {showSparkAnimation && <SparkAnimation />}
       <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-card border-b border-border p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center">
-              <Heart className="w-6 h-6 text-coral mr-2" />
-              Potential Matches
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {matches.length} potential connections waiting for your review
-            </p>
+        {/* Header */}
+        <div className="bg-card border-b border-border p-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="matches" className="flex items-center gap-2">
+                <Heart className="w-4 h-4" />
+                Potential Matches
+              </TabsTrigger>
+              <TabsTrigger value="sparks" className="flex items-center gap-2">
+                <MessageCircle className="w-4 h-4" />
+                Spark Messages
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold flex items-center">
+                {activeTab === "matches" ? (
+                  <>
+                    <Heart className="w-6 h-6 text-coral mr-2" />
+                    Potential Matches
+                  </>
+                ) : (
+                  <>
+                    <MessageCircle className="w-6 h-6 text-spark mr-2" />
+                    Spark Messages
+                  </>
+                )}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {activeTab === "matches" 
+                  ? `${matches.length} potential connections waiting for your review`
+                  : "Chat with your confirmed matches"
+                }
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="p-4 space-y-4">
-        {matches.length > 0 ? (
-          matches.map((match) => (
-            <Card key={match.id} className="w-full">
-              <CardHeader className="pb-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-4">
-                    {/* Large Profile Photo */}
-                    <div className="flex-shrink-0">
-                      <Avatar className="w-20 h-20 border-2 border-border">
-                        <AvatarImage 
-                          src={match.other_user.profile_photo_url || undefined} 
-                          alt={`${match.other_user.first_name} ${match.other_user.last_name}`}
-                          className="object-cover"
-                        />
-                        <AvatarFallback className="text-lg font-semibold">
-                          {match.other_user.first_name[0]}{match.other_user.last_name[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                    </div>
-                    
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <Badge variant="secondary" className="bg-gradient-to-r from-spark/20 to-coral/20">
-                          <Sparkles className="w-3 h-3 mr-1" />
-                          {Math.round(match.confidence_score * 100)}% Match
-                        </Badge>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
+          <TabsContent value="matches" className="m-0">
+            <div className="p-4 space-y-4">
+              {matches.length > 0 ? (
+                matches.map((match) => (
+                  <Card key={match.id} className="w-full">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start space-x-4">
+                          {/* Large Profile Photo */}
+                          <div className="flex-shrink-0">
+                            <Avatar className="w-20 h-20 border-2 border-border">
+                              <AvatarImage 
+                                src={match.other_user.profile_photo_url || undefined} 
+                                alt={`${match.other_user.first_name} ${match.other_user.last_name}`}
+                                className="object-cover"
+                              />
+                              <AvatarFallback className="text-lg font-semibold">
+                                {match.other_user.first_name[0]}{match.other_user.last_name[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
+                          
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Badge variant="secondary" className="bg-gradient-to-r from-spark/20 to-coral/20">
+                                <Sparkles className="w-3 h-3 mr-1" />
+                                {Math.round(match.confidence_score * 100)}% Match
+                              </Badge>
+                            </div>
+                            <div className="flex items-center text-lg font-semibold">
+                              <User className="w-4 h-4 mr-2" />
+                              {match.other_user.first_name} {match.other_user.last_name}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(match.created_at).toLocaleDateString()}
+                        </div>
                       </div>
-                      <div className="flex items-center text-lg font-semibold">
-                        <User className="w-4 h-4 mr-2" />
-                        {match.other_user.first_name} {match.other_user.last_name}
+                    </CardHeader>
+
+                    <CardContent className="space-y-4">
+                      <div>
+                        <h4 className="font-medium text-sm mb-2">Their Memory:</h4>
+                        <p className="text-sm text-foreground leading-relaxed bg-muted/30 p-3 rounded-lg">
+                          {match.other_memory.description}
+                        </p>
                       </div>
-                    </div>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {new Date(match.created_at).toLocaleDateString()}
-                  </div>
-                </div>
-              </CardHeader>
 
-              <CardContent className="space-y-4">
-                <div>
-                  <h4 className="font-medium text-sm mb-2">Their Memory:</h4>
-                  <p className="text-sm text-foreground leading-relaxed bg-muted/30 p-3 rounded-lg">
-                    {match.other_memory.description}
-                  </p>
-                </div>
+                      <div className="flex items-center text-xs text-muted-foreground space-x-4">
+                        <div className="flex items-center">
+                          <MapPin className="w-3 h-3 mr-1" />
+                          {/* Extract location from match reason since we can't access other user's memory due to RLS */}
+                          {match.match_reason.includes('SoCo Apartments') ? 'SoCo Apartments, Napa' : 'Location from match context'}
+                        </div>
+                        <div className="flex items-center">
+                          <Clock className="w-3 h-3 mr-1" />
+                          {/* Extract time from match reason */}
+                          {match.match_reason.includes('6pm') ? 'Around 6 PM, July 23rd' : 'Time from match context'}
+                        </div>
+                      </div>
 
-                <div className="flex items-center text-xs text-muted-foreground space-x-4">
-                  <div className="flex items-center">
-                    <MapPin className="w-3 h-3 mr-1" />
-                    {/* Extract location from match reason since we can't access other user's memory due to RLS */}
-                    {match.match_reason.includes('SoCo Apartments') ? 'SoCo Apartments, Napa' : 'Location from match context'}
-                  </div>
-                  <div className="flex items-center">
-                    <Clock className="w-3 h-3 mr-1" />
-                    {/* Extract time from match reason */}
-                    {match.match_reason.includes('6pm') ? 'Around 6 PM, July 23rd' : 'Time from match context'}
-                  </div>
-                </div>
+                      <div className="p-3 bg-muted/30 rounded-lg">
+                        <h4 className="font-medium text-sm mb-1">Why this might be a match:</h4>
+                        <p className="text-xs text-muted-foreground">{match.match_reason}</p>
+                      </div>
 
-                <div className="p-3 bg-muted/30 rounded-lg">
-                  <h4 className="font-medium text-sm mb-1">Why this might be a match:</h4>
-                  <p className="text-xs text-muted-foreground">{match.match_reason}</p>
-                </div>
+                      <div className="flex gap-2 pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => respondToMatch(match.id, false)}
+                          className="flex-1"
+                        >
+                          <X className="w-4 h-4 mr-2" />
+                          Not Them
+                        </Button>
+                        <Button
+                          variant="spark"
+                          size="sm"
+                          onClick={() => respondToMatch(match.id, true)}
+                          className="flex-1"
+                        >
+                          <Heart className="w-4 h-4 mr-2" />
+                          Yes, That's Them!
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <Card className="text-center py-12">
+                  <CardContent>
+                    <Heart className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <h2 className="text-xl font-bold mb-2">No Matches Yet</h2>
+                    <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                      We haven't found any potential matches for your memories yet. 
+                      Keep sharing more memories to increase your chances!
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
 
-                <div className="flex gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => respondToMatch(match.id, false)}
-                    className="flex-1"
-                  >
-                    <X className="w-4 h-4 mr-2" />
-                    Not Them
-                  </Button>
-                  <Button
-                    variant="spark"
-                    size="sm"
-                    onClick={() => respondToMatch(match.id, true)}
-                    className="flex-1"
-                  >
-                    <Heart className="w-4 h-4 mr-2" />
-                    Yes, That's Them!
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          <Card className="text-center py-12">
-            <CardContent>
-              <Heart className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h2 className="text-xl font-bold mb-2">No Matches Yet</h2>
-              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                We haven't found any potential matches for your memories yet. 
-                Keep sharing more memories to increase your chances!
-              </p>
-            </CardContent>
-          </Card>
-        )}
+          <TabsContent value="sparks" className="flex-1 flex flex-col m-0">
+            <SparkMessages />
+          </TabsContent>
+        </Tabs>
       </div>
-    </div>
     </>
   );
 };

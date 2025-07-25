@@ -87,9 +87,12 @@ const Navigation = ({ className }: NavigationProps) => {
               size="sm"
               onClick={() => {
                 if (path === "/chat" && counts.messages > 0) {
-                  // Navigate to chat with the appropriate tab
-                  const targetTab = counts.sparkMessages > 0 ? "sparks" : "messages";
+                  // Navigate to chat with private messages only
+                  const targetTab = "messages";
                   navigate(path, { state: { activeTab: targetTab } });
+                } else if (path === "/matches" && counts.sparkMessages > 0) {
+                  // Navigate to matches with spark messages tab
+                  navigate(path, { state: { activeTab: "sparks" } });
                 } else {
                   navigate(path);
                 }
@@ -112,11 +115,11 @@ const Navigation = ({ className }: NavigationProps) => {
                 )} />
                 
                 {/* Notification badge */}
-                {((path === "/matches" && counts.matches > 0) || 
-                  (path === "/chat" && counts.messages > 0)) && (
+                {((path === "/matches" && (counts.matches > 0 || counts.sparkMessages > 0)) || 
+                  (path === "/chat" && counts.privateMessages > 0)) && (
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-destructive rounded-full flex items-center justify-center">
                     <span className="text-[10px] font-bold text-white">
-                      {path === "/matches" ? counts.matches : counts.messages}
+                      {path === "/matches" ? (counts.matches + counts.sparkMessages) : counts.privateMessages}
                     </span>
                   </div>
                 )}

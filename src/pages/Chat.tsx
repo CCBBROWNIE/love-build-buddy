@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sparkles, MessageCircle, Heart } from "lucide-react";
+import { Sparkles, MessageCircle } from "lucide-react";
 import AIAssistant from "@/components/AIAssistant";
-import SparkMessages from "@/components/SparkMessages";
 import PrivateMessages from "@/components/PrivateMessages";
 
 const Chat = () => {
@@ -15,22 +14,13 @@ const Chat = () => {
   // Handle navigation state for directing to specific tab
   useEffect(() => {
     const state = location.state as { activeTab?: string };
-    if (state?.activeTab) {
+    if (state?.activeTab && (state.activeTab === "ai" || state.activeTab === "messages")) {
       setActiveTab(state.activeTab);
       // Clear the state to prevent unwanted tab switches
       navigate(location.pathname, { replace: true });
     }
   }, [location, navigate]);
 
-  // Listen for custom event to open spark messages
-  useEffect(() => {
-    const handleOpenSparkMessages = () => {
-      setActiveTab("sparks");
-    };
-
-    window.addEventListener('openSparkMessages', handleOpenSparkMessages);
-    return () => window.removeEventListener('openSparkMessages', handleOpenSparkMessages);
-  }, []);
 
   const handleNavigateToMemories = () => {
     navigate('/memories');
@@ -41,14 +31,10 @@ const Chat = () => {
       {/* Header */}
       <div className="bg-background/95 border-b border-border/50 backdrop-blur-lg p-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="ai" className="flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
               AI Assistant
-            </TabsTrigger>
-            <TabsTrigger value="sparks" className="flex items-center gap-2">
-              <Heart className="w-4 h-4" />
-              Spark Messages
             </TabsTrigger>
             <TabsTrigger value="messages" className="flex items-center gap-2">
               <MessageCircle className="w-4 h-4" />
@@ -61,7 +47,7 @@ const Chat = () => {
           <div className="flex items-center space-x-3">
             <Avatar className="border-2 border-spark shadow-warm animate-gentle-bounce">
               <AvatarFallback className="bg-gradient-to-br from-spark to-coral text-midnight font-bold">
-                {activeTab === "ai" ? "MC" : activeTab === "sparks" ? "✨" : "PM"}
+                {activeTab === "ai" ? "MC" : "PM"}
               </AvatarFallback>
             </Avatar>
             <div>
@@ -71,8 +57,6 @@ const Chat = () => {
                     <span className="text-foreground">Meet</span>
                     <span className="text-spark">Cute</span>
                   </>
-                ) : activeTab === "sparks" ? (
-                  <span className="text-foreground">Spark Messages</span>
                 ) : (
                   <span className="text-foreground">Private Messages</span>
                 )}
@@ -80,8 +64,6 @@ const Chat = () => {
               <p className="text-sm text-muted-foreground">
                 {activeTab === "ai" 
                   ? "Your AI Memory Assistant" 
-                  : activeTab === "sparks"
-                  ? "Chat with your confirmed matches"
                   : "Direct conversations"
                 }
               </p>
@@ -95,10 +77,6 @@ const Chat = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
           <TabsContent value="ai" className="flex-1 flex flex-col m-0">
             <AIAssistant onNavigateToMemories={handleNavigateToMemories} />
-          </TabsContent>
-
-          <TabsContent value="sparks" className="flex-1 flex flex-col m-0">
-            <SparkMessages />
           </TabsContent>
 
           <TabsContent value="messages" className="flex-1 flex flex-col m-0">
