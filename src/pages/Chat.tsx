@@ -23,6 +23,7 @@ const Chat = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("ai");
+  const [conversations, setConversations] = useState<any[]>([]);
   
   // Initialize messages directly from localStorage
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -65,6 +66,68 @@ const Chat = () => {
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Load conversations when user changes or component mounts
+  useEffect(() => {
+    if (user) {
+      loadConversations();
+    }
+  }, [user]);
+
+  const loadConversations = async () => {
+    if (!user) return;
+
+    try {
+      // Get conversations where user is a participant
+      const { data: participantData, error: participantError } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', user.id);
+
+      if (participantError) throw participantError;
+
+      if (participantData && participantData.length > 0) {
+        const conversationIds = participantData.map(p => p.conversation_id);
+        
+        // Get conversation details
+        const { data: conversationsData, error: conversationsError } = await supabase
+          .from('conversations')
+          .select('*')
+          .in('id', conversationIds)
+          .order('last_message_at', { ascending: false });
+
+        if (conversationsError) throw conversationsError;
+
+        // For each conversation, get the other participant's profile
+        const conversationsWithProfiles = await Promise.all(
+          conversationsData.map(async (conv) => {
+            const { data: otherParticipants, error } = await supabase
+              .from('conversation_participants')
+              .select(`
+                user_id,
+                profiles (
+                  first_name,
+                  last_name,
+                  profile_photo_url
+                )
+              `)
+              .eq('conversation_id', conv.id)
+              .neq('user_id', user.id);
+
+            if (error) throw error;
+
+            return {
+              ...conv,
+              otherParticipant: otherParticipants[0]
+            };
+          })
+        );
+
+        setConversations(conversationsWithProfiles);
+      }
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+    }
+  };
 
   // Save messages to localStorage whenever messages change
   useEffect(() => {
@@ -528,20 +591,55 @@ const Chat = () => {
 
           <TabsContent value="messages" className="flex-1 flex flex-col m-0">
             {/* Private Messages Content */}
-            <div className="flex-1 flex items-center justify-center p-8">
-              <div className="text-center max-w-md">
-                <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <MessageCircle className="w-10 h-10 text-primary" />
+            <div className="flex-1 overflow-y-auto p-4">
+              {conversations.length > 0 ? (
+                <div className="space-y-3">
+                  {conversations.map((conversation) => (
+                    <Card 
+                      key={conversation.id} 
+                      className="p-4 hover:shadow-lg transition-shadow cursor-pointer"
+                      onClick={() => navigate(`/chat/${conversation.id}`)}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Avatar>
+                          <AvatarImage src={conversation.otherParticipant?.profiles?.profile_photo_url} />
+                          <AvatarFallback>
+                            {conversation.otherParticipant?.profiles?.first_name?.[0]}
+                            {conversation.otherParticipant?.profiles?.last_name?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <h3 className="font-medium">
+                            {conversation.otherParticipant?.profiles?.first_name} {conversation.otherParticipant?.profiles?.last_name}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            {conversation.last_message_at ? 
+                              new Date(conversation.last_message_at).toLocaleDateString() : 
+                              'New conversation'
+                            }
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
                 </div>
-                <h2 className="text-2xl font-bold mb-4">Private Messages</h2>
-                <p className="text-muted-foreground mb-6">
-                  Don't worry, people can only find your profile through the feed if you comment or post.
-                </p>
-                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                  <Users className="w-4 h-4" />
-                  <span>No messages yet</span>
+              ) : (
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center max-w-md">
+                    <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <MessageCircle className="w-10 h-10 text-primary" />
+                    </div>
+                    <h2 className="text-2xl font-bold mb-4">Private Messages</h2>
+                    <p className="text-muted-foreground mb-6">
+                      Don't worry, people can only find your profile through the feed if you comment or post.
+                    </p>
+                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                      <Users className="w-4 h-4" />
+                      <span>No messages yet</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>
