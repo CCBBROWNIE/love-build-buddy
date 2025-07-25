@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +8,7 @@ import { Heart, X, Clock, MapPin, Sparkles, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import SparkAnimation from "@/components/SparkAnimation";
 
 interface Match {
   id: string;
@@ -36,8 +38,10 @@ interface Match {
 const Matches = () => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showSparkAnimation, setShowSparkAnimation] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const loadMatches = async () => {
     if (!user) return;
@@ -107,6 +111,34 @@ const Matches = () => {
     loadMatches();
   }, [user]);
 
+  const createConversation = async (otherUserId: string) => {
+    try {
+      // Create a new conversation
+      const { data: conversation, error: conversationError } = await supabase
+        .from('conversations')
+        .insert({})
+        .select()
+        .single();
+
+      if (conversationError) throw conversationError;
+
+      // Add both users as participants
+      const { error: participantsError } = await supabase
+        .from('conversation_participants')
+        .insert([
+          { conversation_id: conversation.id, user_id: user!.id },
+          { conversation_id: conversation.id, user_id: otherUserId }
+        ]);
+
+      if (participantsError) throw participantsError;
+
+      return conversation.id;
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      throw error;
+    }
+  };
+
   const respondToMatch = async (matchId: string, accept: boolean) => {
     if (!user) return;
 
@@ -116,25 +148,55 @@ const Matches = () => {
 
       const isUser1 = match.user1_id === user.id;
       const updateField = isUser1 ? 'user1_confirmed' : 'user2_confirmed';
+      const otherUserId = isUser1 ? match.user2_id : match.user1_id;
 
-      const { error } = await supabase
-        .from('matches')
-        .update({ [updateField]: accept })
-        .eq('id', matchId);
+      if (accept) {
+        // Show spark animation
+        setShowSparkAnimation(true);
 
-      if (error) throw error;
+        // Update match
+        const { error } = await supabase
+          .from('matches')
+          .update({ [updateField]: accept })
+          .eq('id', matchId);
 
-      // Remove the match from the list
-      setMatches(prev => prev.filter(m => m.id !== matchId));
+        if (error) throw error;
 
-      toast({
-        title: accept ? "Match accepted!" : "Match declined",
-        description: accept 
-          ? "If they accept too, you'll be able to start chatting!"
-          : "This match has been declined",
-      });
+        // Remove the match from the list
+        setMatches(prev => prev.filter(m => m.id !== matchId));
+
+        // Create conversation and navigate to chat after animation
+        const conversationId = await createConversation(otherUserId);
+        
+        setTimeout(() => {
+          setShowSparkAnimation(false);
+          navigate(`/chat/${conversationId}`);
+        }, 2000);
+
+        toast({
+          title: "Match accepted!",
+          description: "Starting your conversation...",
+        });
+      } else {
+        // For decline, just update without animation
+        const { error } = await supabase
+          .from('matches')
+          .update({ [updateField]: accept })
+          .eq('id', matchId);
+
+        if (error) throw error;
+
+        // Remove the match from the list
+        setMatches(prev => prev.filter(m => m.id !== matchId));
+
+        toast({
+          title: "Match declined",
+          description: "This match has been declined",
+        });
+      }
     } catch (error) {
       console.error('Error responding to match:', error);
+      setShowSparkAnimation(false);
       toast({
         title: "Error responding to match",
         description: "Please try again later",
@@ -155,7 +217,9 @@ const Matches = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      {showSparkAnimation && <SparkAnimation />}
+      <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-card border-b border-border p-4">
         <div className="flex items-center justify-between">
@@ -274,6 +338,7 @@ const Matches = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
 

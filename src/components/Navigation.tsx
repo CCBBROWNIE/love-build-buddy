@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotifications } from "@/hooks/useNotifications";
 
 interface NavigationProps {
   className?: string;
@@ -22,6 +23,7 @@ const Navigation = ({ className }: NavigationProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useAuth();
+  const { counts } = useNotifications();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -91,7 +93,7 @@ const Navigation = ({ className }: NavigationProps) => {
               )}
             >
               <div className={cn(
-                "flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300",
+                "flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300 relative",
                 isActive 
                   ? `bg-gradient-to-r ${gradient} shadow-glow` 
                   : "hover:bg-secondary/50"
@@ -100,6 +102,14 @@ const Navigation = ({ className }: NavigationProps) => {
                   "w-4 h-4 transition-colors duration-300",
                   isActive ? "text-white" : "text-muted-foreground"
                 )} />
+                
+                {/* Notification badge */}
+                {((path === "/matches" && counts.matches > 0) || 
+                  (path === "/chat" && counts.messages > 0)) && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-destructive rounded-full flex items-center justify-center">
+                    <span className="text-[10px] font-bold text-white">1</span>
+                  </div>
+                )}
               </div>
               <span className={cn(
                 "text-xs font-medium transition-colors duration-300",
