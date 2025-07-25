@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sparkles, MessageCircle, Heart } from "lucide-react";
@@ -9,7 +9,18 @@ import PrivateMessages from "@/components/PrivateMessages";
 
 const Chat = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState("ai");
+
+  // Handle navigation state for directing to specific tab
+  useEffect(() => {
+    const state = location.state as { activeTab?: string };
+    if (state?.activeTab) {
+      setActiveTab(state.activeTab);
+      // Clear the state to prevent unwanted tab switches
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location, navigate]);
 
   // Listen for custom event to open spark messages
   useEffect(() => {

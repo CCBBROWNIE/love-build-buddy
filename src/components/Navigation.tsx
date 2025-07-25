@@ -85,7 +85,15 @@ const Navigation = ({ className }: NavigationProps) => {
               key={path}
               variant="ghost"
               size="sm"
-              onClick={() => navigate(path)}
+              onClick={() => {
+                if (path === "/chat" && counts.messages > 0) {
+                  // Navigate to chat with the appropriate tab
+                  const targetTab = counts.sparkMessages > 0 ? "sparks" : "messages";
+                  navigate(path, { state: { activeTab: targetTab } });
+                } else {
+                  navigate(path);
+                }
+              }}
               className={cn(
                 "flex flex-col items-center gap-1 h-auto py-2 px-3 rounded-xl transition-all duration-300",
                 "hover:scale-105 active:scale-95",
@@ -107,7 +115,9 @@ const Navigation = ({ className }: NavigationProps) => {
                 {((path === "/matches" && counts.matches > 0) || 
                   (path === "/chat" && counts.messages > 0)) && (
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-destructive rounded-full flex items-center justify-center">
-                    <span className="text-[10px] font-bold text-white">1</span>
+                    <span className="text-[10px] font-bold text-white">
+                      {path === "/matches" ? counts.matches : counts.messages}
+                    </span>
                   </div>
                 )}
               </div>
