@@ -57,33 +57,22 @@ serve(async (req) => {
     console.log('Profile photo URL:', profile.profile_photo_url);
     console.log('Verification selfie URL:', profile.verification_selfie_url);
 
-    // Extract file paths from URLs for storage API
-    const profilePhotoPath = profile.profile_photo_url.split('/public/profile-photos/')[1];
-    const verificationSelfiePath = profile.verification_selfie_url.split('/public/verification-selfies/')[1];
-    
-    console.log('Profile photo path:', profilePhotoPath);
-    console.log('Verification selfie path:', verificationSelfiePath);
-
-    // Download images using Supabase storage API
-    const [profileImageDownload, selfieImageDownload] = await Promise.all([
-      supabase.storage.from('profile-photos').download(profilePhotoPath),
-      supabase.storage.from('verification-selfies').download(verificationSelfiePath)
+    // Since both buckets are now public, we can fetch directly
+    console.log('Fetching images...');
+    const [profileImageResponse, selfieImageResponse] = await Promise.all([
+      fetch(profile.profile_photo_url),
+      fetch(profile.verification_selfie_url)
     ]);
 
-    console.log('Profile image download error:', profileImageDownload.error);
-    console.log('Selfie image download error:', selfieImageDownload.error);
+    console.log('Profile image response status:', profileImageResponse.status);
+    console.log('Selfie image response status:', selfieImageResponse.status);
 
-    if (profileImageDownload.error || selfieImageDownload.error) {
-      throw new Error(`Failed to download images: Profile ${profileImageDownload.error?.message}, Selfie ${selfieImageDownload.error?.message}`);
+    if (!profileImageResponse.ok || !selfieImageResponse.ok) {
+      throw new Error(`Failed to fetch images: Profile ${profileImageResponse.status}, Selfie ${selfieImageResponse.status}`);
     }
 
-    if (!profileImageDownload.data || !selfieImageDownload.data) {
-      throw new Error('No image data received from storage');
-    }
-
-    // Convert blobs to array buffers
-    const profileImageBuffer = await profileImageDownload.data.arrayBuffer();
-    const selfieImageBuffer = await selfieImageDownload.data.arrayBuffer();
+    const profileImageBuffer = await profileImageResponse.arrayBuffer();
+    const selfieImageBuffer = await selfieImageResponse.arrayBuffer();
 
     console.log('Profile image size:', profileImageBuffer.byteLength);
     console.log('Selfie image size:', selfieImageBuffer.byteLength);
@@ -92,9 +81,9 @@ serve(async (req) => {
     const profileImageBase64 = btoa(String.fromCharCode(...new Uint8Array(profileImageBuffer)));
     const selfieImageBase64 = btoa(String.fromCharCode(...new Uint8Array(selfieImageBuffer)));
 
-    // Get content types from blob types or default to jpeg
-    const profileContentType = profileImageDownload.data.type || 'image/jpeg';
-    const selfieContentType = selfieImageDownload.data.type || 'image/jpeg';
+    // Get content types from response headers or default to jpeg
+    const profileContentType = profileImageResponse.headers.get('content-type') || 'image/jpeg';
+    const selfieContentType = selfieImageResponse.headers.get('content-type') || 'image/jpeg';
 
     console.log('Profile content type:', profileContentType);
     console.log('Selfie content type:', selfieContentType);
