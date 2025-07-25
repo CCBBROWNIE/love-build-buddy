@@ -35,51 +35,82 @@ const Chat = () => {
 
   // Load persisted chat messages on component mount
   useEffect(() => {
-    console.log("Loading chat messages from localStorage...");
-    const savedMessages = localStorage.getItem('meetcute-chat-messages');
-    const savedConversationsData = localStorage.getItem('meetcute-saved-conversations');
-    
-    console.log("Saved messages in localStorage:", savedMessages);
-    console.log("Saved conversations in localStorage:", savedConversationsData);
-    
-    if (savedMessages) {
-      try {
-        const parsedMessages = JSON.parse(savedMessages);
-        console.log("Parsed messages:", parsedMessages);
-        // Convert timestamp strings back to Date objects
-        const messagesWithDates = parsedMessages.map((msg: any) => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp)
-        }));
-        console.log("Messages with date objects:", messagesWithDates);
-        setMessages(messagesWithDates);
-      } catch (error) {
-        console.error('Error loading saved messages:', error);
+    console.log("=== CHAT COMPONENT MOUNTED ===");
+    try {
+      // Clear any corrupted data first
+      const testKey = 'meetcute-test';
+      localStorage.setItem(testKey, 'test');
+      const testValue = localStorage.getItem(testKey);
+      console.log("LocalStorage test:", testValue);
+      localStorage.removeItem(testKey);
+      
+      const savedMessages = localStorage.getItem('meetcute-chat-messages');
+      const savedConversationsData = localStorage.getItem('meetcute-saved-conversations');
+      
+      console.log("Raw savedMessages:", savedMessages);
+      console.log("Raw savedConversations:", savedConversationsData);
+      
+      if (savedMessages && savedMessages !== 'undefined' && savedMessages !== 'null') {
+        try {
+          const parsedMessages = JSON.parse(savedMessages);
+          console.log("Parsed messages:", parsedMessages);
+          
+          if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
+            // Convert timestamp strings back to Date objects
+            const messagesWithDates = parsedMessages.map((msg: any) => ({
+              ...msg,
+              timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
+            }));
+            console.log("Setting messages:", messagesWithDates);
+            setMessages(messagesWithDates);
+          }
+        } catch (parseError) {
+          console.error('Error parsing saved messages:', parseError);
+          localStorage.removeItem('meetcute-chat-messages');
+        }
       }
-    }
-    
-    if (savedConversationsData) {
-      try {
-        const parsedSavedConversations = JSON.parse(savedConversationsData);
-        setSavedConversations(new Set(parsedSavedConversations));
-      } catch (error) {
-        console.error('Error loading saved conversations:', error);
+      
+      if (savedConversationsData && savedConversationsData !== 'undefined' && savedConversationsData !== 'null') {
+        try {
+          const parsedSavedConversations = JSON.parse(savedConversationsData);
+          setSavedConversations(new Set(parsedSavedConversations));
+        } catch (parseError) {
+          console.error('Error parsing saved conversations:', parseError);
+          localStorage.removeItem('meetcute-saved-conversations');
+        }
       }
+    } catch (error) {
+      console.error('Error loading chat data:', error);
     }
   }, []);
 
   // Save messages to localStorage whenever messages change
   useEffect(() => {
+    console.log("Messages changed, length:", messages.length);
     if (messages.length > 0) {
-      console.log("Saving messages to localStorage:", messages);
-      localStorage.setItem('meetcute-chat-messages', JSON.stringify(messages));
+      try {
+        const messagesToSave = JSON.stringify(messages);
+        console.log("Saving to localStorage:", messagesToSave);
+        localStorage.setItem('meetcute-chat-messages', messagesToSave);
+        
+        // Verify it was saved
+        const verification = localStorage.getItem('meetcute-chat-messages');
+        console.log("Verification - saved successfully:", !!verification);
+      } catch (error) {
+        console.error('Error saving messages:', error);
+      }
     }
   }, [messages]);
 
   // Save savedConversations to localStorage whenever it changes
   useEffect(() => {
-    console.log("Saving conversations to localStorage:", Array.from(savedConversations));
-    localStorage.setItem('meetcute-saved-conversations', JSON.stringify(Array.from(savedConversations)));
+    try {
+      const conversationsArray = Array.from(savedConversations);
+      localStorage.setItem('meetcute-saved-conversations', JSON.stringify(conversationsArray));
+      console.log("Saved conversations:", conversationsArray);
+    } catch (error) {
+      console.error('Error saving conversations:', error);
+    }
   }, [savedConversations]);
 
   const scrollToBottom = () => {
