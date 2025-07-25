@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import SparkAnimation from "@/components/SparkAnimation";
 import SparkMessages from "@/components/SparkMessages";
+import { useNotifications } from "@/hooks/useNotifications";
 
 interface Match {
   id: string;
@@ -43,6 +44,7 @@ const Matches = () => {
   const [showSparkAnimation, setShowSparkAnimation] = useState(false);
   const [activeTab, setActiveTab] = useState("matches");
   const { user } = useAuth();
+  const { markConversationAsRead } = useNotifications();
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -66,6 +68,55 @@ const Matches = () => {
     window.addEventListener('openSparkMessages', handleOpenSparkMessages);
     return () => window.removeEventListener('openSparkMessages', handleOpenSparkMessages);
   }, []);
+
+  // Mark spark messages as read when switching to sparks tab
+  useEffect(() => {
+    if (activeTab === "sparks" && user) {
+      // Mark all spark conversation messages as read after a small delay
+      setTimeout(async () => {
+        try {
+          // Get all conversations from accepted matches
+          const { data: acceptedMatches } = await supabase
+            .from('matches')
+            .select('user1_id, user2_id')
+            .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+            .eq('status', 'accepted');
+
+          if (acceptedMatches?.length) {
+            // Get conversations for these matches
+            const { data: conversations } = await supabase
+              .from('conversation_participants')
+              .select('conversation_id')
+              .eq('user_id', user.id);
+
+            if (conversations?.length) {
+              for (const conv of conversations) {
+                // Check if this conversation is with a matched user
+                const { data: otherParticipants } = await supabase
+                  .from('conversation_participants')
+                  .select('user_id')
+                  .eq('conversation_id', conv.conversation_id)
+                  .neq('user_id', user.id);
+
+                if (otherParticipants?.length) {
+                  const otherUserId = otherParticipants[0].user_id;
+                  const isMatchConversation = acceptedMatches.some(match => 
+                    (match.user1_id === otherUserId || match.user2_id === otherUserId)
+                  );
+
+                  if (isMatchConversation) {
+                    await markConversationAsRead(conv.conversation_id);
+                  }
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error marking spark messages as read:', error);
+        }
+      }, 500); // Small delay to ensure UI has switched
+    }
+  }, [activeTab, user, markConversationAsRead]);
 
   const loadMatches = async () => {
     if (!user) return;

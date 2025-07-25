@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Sparkles, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotifications } from "@/hooks/useNotifications";
 
 interface SparkMessage {
   id: string;
@@ -24,6 +25,7 @@ const SparkMessages = () => {
   const [sparkMessages, setSparkMessages] = useState<SparkMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { markConversationAsRead } = useNotifications();
   const navigate = useNavigate();
 
   useEffect(() => {

@@ -122,6 +122,44 @@ export const useNotifications = () => {
     }
   };
 
+  // Function to mark messages as read in a conversation
+  const markConversationAsRead = async (conversationId: string) => {
+    if (!user) return;
+
+    try {
+      await supabase
+        .from('messages')
+        .update({ read_at: new Date().toISOString() })
+        .eq('conversation_id', conversationId)
+        .neq('sender_id', user.id)
+        .is('read_at', null);
+
+      // Refresh notification counts
+      loadNotificationCounts();
+    } catch (error) {
+      console.error('Error marking conversation as read:', error);
+    }
+  };
+
+  // Function to mark specific messages as read
+  const markMessagesAsRead = async (messageIds: string[]) => {
+    if (!user || !messageIds.length) return;
+
+    try {
+      await supabase
+        .from('messages')
+        .update({ read_at: new Date().toISOString() })
+        .in('id', messageIds)
+        .neq('sender_id', user.id)
+        .is('read_at', null);
+
+      // Refresh notification counts
+      loadNotificationCounts();
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+    }
+  };
+
   useEffect(() => {
     loadNotificationCounts();
 
@@ -151,6 +189,15 @@ export const useNotifications = () => {
         },
         loadNotificationCounts
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages'
+        },
+        loadNotificationCounts
+      )
       .subscribe();
 
     return () => {
@@ -159,5 +206,10 @@ export const useNotifications = () => {
     };
   }, [user]);
 
-  return { counts, refreshCounts: loadNotificationCounts };
+  return { 
+    counts, 
+    refreshCounts: loadNotificationCounts,
+    markConversationAsRead,
+    markMessagesAsRead
+  };
 };

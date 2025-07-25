@@ -5,6 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { MessageCircle, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotifications } from "@/hooks/useNotifications";
 
 interface Conversation {
   id: string;
@@ -22,6 +23,7 @@ const PrivateMessages = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { markConversationAsRead } = useNotifications();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -112,6 +114,13 @@ const PrivateMessages = () => {
     }
   };
 
+  const handleConversationClick = async (conversationId: string) => {
+    // Mark messages as read in this conversation
+    await markConversationAsRead(conversationId);
+    // Navigate to the conversation
+    navigate(`/chat/${conversationId}`);
+  };
+
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -131,7 +140,7 @@ const PrivateMessages = () => {
             <Card 
               key={conversation.id} 
               className="p-4 hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => navigate(`/chat/${conversation.id}`)}
+              onClick={() => handleConversationClick(conversation.id)}
             >
               <div className="flex items-center space-x-3">
                 <Avatar>
