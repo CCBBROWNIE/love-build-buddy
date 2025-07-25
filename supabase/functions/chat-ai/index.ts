@@ -73,11 +73,23 @@ serve(async (req) => {
       );
     }
 
-    // Prepare messages array
+    // Prepare messages array with current date/time context
+    const currentDate = new Date().toISOString();
+    const currentDateFormatted = new Date().toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    
     const messages = [
       {
         role: 'system',
-        content: 'You are MeetCute, a friendly AI assistant that helps people reconnect with someone they briefly met. Be warm, enthusiastic, and ask follow-up questions to help them describe their memory in detail.'
+        content: `You are MeetCute, a friendly AI assistant that helps people reconnect with someone they briefly met. Be warm, enthusiastic, and ask follow-up questions to help them describe their memory in detail. 
+
+Current date and time: ${currentDateFormatted} (${currentDate})
+
+Use this information to provide contextually relevant responses about timing and recent events.`
       }
     ];
 
