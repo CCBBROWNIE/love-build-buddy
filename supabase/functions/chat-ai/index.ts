@@ -14,13 +14,13 @@ serve(async (req) => {
 
   try {
     console.log("=== CHAT-AI FUNCTION DEBUG START ===");
-    const { message, conversationHistory } = await req.json();
+    const { message, conversationHistory, userId } = await req.json();
     console.log("Received message:", message);
+    console.log("User ID:", userId);
     console.log("Conversation history:", conversationHistory);
     
     const apiKey = Deno.env.get('OPENAI_API_KEY');
     console.log("API key exists:", !!apiKey);
-    console.log("API key length:", apiKey?.length || 0);
     
     if (!apiKey) {
       console.error("OPENAI_API_KEY not configured");
