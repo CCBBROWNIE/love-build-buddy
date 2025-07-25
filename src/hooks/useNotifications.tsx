@@ -18,12 +18,24 @@ export const useNotifications = () => {
     }
 
     try {
-      // Count pending matches
-      const { count: matchCount } = await supabase
+      // Count pending matches where current user hasn't responded yet
+      const { data: allMatches } = await supabase
         .from('matches')
-        .select('*', { count: 'exact', head: true })
+        .select('*')
         .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
         .eq('status', 'pending');
+
+      // Filter to only count matches where current user hasn't responded
+      const unrespondedMatches = (allMatches || []).filter(match => {
+        const isUser1 = match.user1_id === user.id;
+        if (isUser1) {
+          return !match.user1_confirmed; // Count only if user1 hasn't confirmed
+        } else {
+          return !match.user2_confirmed; // Count only if user2 hasn't confirmed
+        }
+      });
+
+      const matchCount = unrespondedMatches.length;
 
       // Count unread messages in conversations the user participates in
       const { data: conversations } = await supabase
