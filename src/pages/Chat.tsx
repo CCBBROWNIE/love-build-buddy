@@ -9,6 +9,7 @@ import { Sparkles, Send, Mic, MicOff, Volume2, VolumeX, Settings, MessageCircle,
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Message {
   id: string;
@@ -19,6 +20,7 @@ interface Message {
 }
 
 const Chat = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("ai");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -43,7 +45,7 @@ const Chat = () => {
     if (messages.length === 0) {
       const greeting: Message = {
         id: "1",
-        text: "Hi I'm MeetCute.ai,\n\nI'm here to help you reconnect with someone, or shoot your shot with someone you didn't get a chance to exchange contact info with.\n\nYou know those brief, electric moments where your eyes meet, or a shared laugh lingers — and then it's gone before anything more could happen? I'm here to break the ice.\n\nTell me who's on your mind.",
+        text: "Hi! I'm MeetCute's AI assistant. Want help writing about your real-life memory? Just tell me what happened — like where you were, what you noticed, and why it stood out. I'll help you save it for potential matches! ✨",
         sender: "ai",
         timestamp: new Date(),
       };
@@ -72,7 +74,8 @@ const Chat = () => {
       const { data, error } = await supabase.functions.invoke('chat-ai', {
         body: {
           message: userMessage,
-          conversationHistory: conversationHistory
+          conversationHistory: conversationHistory,
+          userId: user?.id
         }
       });
 
@@ -97,6 +100,11 @@ const Chat = () => {
 
       setMessages(prev => prev.filter(msg => !msg.typing).concat([aiMessage]));
       setIsTyping(false);
+
+      // If AI suggests saving memory, we could show a save button here
+      if (data?.suggested_action === 'save_memory') {
+        console.log("AI suggests saving memory - could show save button");
+      }
       
     } catch (error) {
       console.error('=== CHAT DEBUG ERROR ===');

@@ -191,8 +191,10 @@ export type Database = {
       }
       memories: {
         Row: {
+          content: string | null
           created_at: string
           description: string
+          embedding: string | null
           extracted_details: Json | null
           extracted_location: string | null
           extracted_time_period: string | null
@@ -201,13 +203,16 @@ export type Database = {
           match_id: string | null
           processed: boolean | null
           status: string | null
+          time_period: string | null
           timestamp: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          content?: string | null
           created_at?: string
           description: string
+          embedding?: string | null
           extracted_details?: Json | null
           extracted_location?: string | null
           extracted_time_period?: string | null
@@ -216,13 +221,16 @@ export type Database = {
           match_id?: string | null
           processed?: boolean | null
           status?: string | null
+          time_period?: string | null
           timestamp: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          content?: string | null
           created_at?: string
           description?: string
+          embedding?: string | null
           extracted_details?: Json | null
           extracted_location?: string | null
           extracted_time_period?: string | null
@@ -231,6 +239,7 @@ export type Database = {
           match_id?: string | null
           processed?: boolean | null
           status?: string | null
+          time_period?: string | null
           timestamp?: string
           updated_at?: string
           user_id?: string
@@ -239,6 +248,57 @@ export type Database = {
           {
             foreignKeyName: "memories_match_id_fkey"
             columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "memories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      memory_matches: {
+        Row: {
+          created_at: string
+          id: string
+          memory1_id: string
+          memory2_id: string
+          similarity_score: number
+          status: string
+          updated_at: string
+          user1_id: string
+          user2_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          memory1_id: string
+          memory2_id: string
+          similarity_score: number
+          status?: string
+          updated_at?: string
+          user1_id: string
+          user2_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          memory1_id?: string
+          memory2_id?: string
+          similarity_score?: number
+          status?: string
+          updated_at?: string
+          user1_id?: string
+          user2_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memory_matches_memory1_id_fkey"
+            columns: ["memory1_id"]
+            isOneToOne: false
+            referencedRelation: "memories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "memory_matches_memory2_id_fkey"
+            columns: ["memory2_id"]
             isOneToOne: false
             referencedRelation: "memories"
             referencedColumns: ["id"]
@@ -453,6 +513,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      binary_quantize: {
+        Args: { "": string } | { "": unknown }
+        Returns: unknown
+      }
       check_rate_limit: {
         Args: {
           p_identifier: string
@@ -478,9 +542,61 @@ export type Database = {
         Args: { user_id: string }
         Returns: number
       }
+      halfvec_avg: {
+        Args: { "": number[] }
+        Returns: unknown
+      }
+      halfvec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      halfvec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      halfvec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
+      hnsw_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_sparsevec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnswhandler: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
       is_following: {
         Args: { follower_user_id: string; following_user_id: string }
         Returns: boolean
+      }
+      ivfflat_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflat_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflathandler: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      l2_norm: {
+        Args: { "": unknown } | { "": unknown }
+        Returns: number
+      }
+      l2_normalize: {
+        Args: { "": string } | { "": unknown } | { "": unknown }
+        Returns: string
       }
       log_security_event: {
         Args: {
@@ -493,6 +609,42 @@ export type Database = {
           p_source?: string
         }
         Returns: string
+      }
+      sparsevec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      sparsevec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      sparsevec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
+      vector_avg: {
+        Args: { "": number[] }
+        Returns: string
+      }
+      vector_dims: {
+        Args: { "": string } | { "": unknown }
+        Returns: number
+      }
+      vector_norm: {
+        Args: { "": string }
+        Returns: number
+      }
+      vector_out: {
+        Args: { "": string }
+        Returns: unknown
+      }
+      vector_send: {
+        Args: { "": string }
+        Returns: string
+      }
+      vector_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
       }
     }
     Enums: {

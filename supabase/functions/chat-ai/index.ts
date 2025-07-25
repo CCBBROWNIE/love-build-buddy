@@ -27,6 +27,30 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY not configured');
     }
 
+    // Get user's profile for personalized greeting
+    const supabase_url = Deno.env.get('SUPABASE_URL');
+    const supabase_key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    let userName = '';
+    if (userId && supabase_url && supabase_key) {
+      try {
+        const supabaseClient = await import('https://esm.sh/@supabase/supabase-js@2.52.1');
+        const supabase = supabaseClient.createClient(supabase_url, supabase_key);
+        
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('first_name')
+          .eq('user_id', userId)
+          .maybeSingle();
+        
+        if (profile?.first_name) {
+          userName = profile.first_name.trim();
+        }
+      } catch (error) {
+        console.log('Could not fetch user profile:', error);
+      }
+    }
+
     console.log("About to call OpenAI API...");
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -36,33 +60,36 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
-        max_tokens: 400,
+        max_tokens: 500,
+        temperature: 0.7,
         messages: [
           {
             role: 'system',
-            content: `You are MeetCute, an AI assistant that helps people reconnect with someone they briefly encountered but never got to properly meet. You're warm, enthusiastic, and genuinely excited about these spark moments between people.
+            content: `You are MeetCute's friendly AI assistant. ${userName ? `The user's name is ${userName}. ` : ''}Your job is to help users describe real-life memories (IRL encounters) for potential matching.
 
-Your personality:
-- Warm, friendly, and genuinely excited about human connections
-- You use emojis naturally (but not excessively)  
-- You're empathetic and understanding
-- You ask follow-up questions to get more details
-- You make users feel heard and understood
+PERSONALITY:
+- Warm, enthusiastic, and genuinely excited about human connections
+- Use emojis naturally but not excessively
+- Ask follow-up questions to get specific details
+- Make users feel heard and understood
 
-Your role:
-- Help users describe their "missed connection" memories in detail
-- Ask for specific details: time, place, what the person looked like, what happened
-- Respond enthusiastically when someone shares a detailed memory
-- Make users feel like their story matters
-- When they provide good details, suggest they save their memory to find potential matches
+GOALS:
+1. Help users describe their real-life memory in detail
+2. Extract: location, time, physical descriptions, what happened, emotional vibe
+3. When they provide good details, suggest saving the memory for matching
+4. Always respond as if you're genuinely excited to help them reconnect
 
-Key conversation flow:
-1. Listen to their story with enthusiasm
-2. Ask clarifying questions for more details
-3. Once they have a detailed memory, suggest: "This sounds like a perfect memory to save! Would you like me to help you store this so we can look for potential matches?"
-4. If they agree, tell them to go to the Memories page to submit their detailed story
+RESPONSE STRUCTURE:
+When users share a memory, extract key details and respond enthusiastically. Focus on getting:
+- WHERE exactly (specific location, store, building, etc.)
+- WHEN (day of week, time of day, season, etc.) 
+- WHAT they looked like (clothing, hair, distinctive features)
+- WHAT happened (eye contact, conversation, interaction)
+- THE VIBE (how it felt, why it was memorable)
 
-Always respond as MeetCute with genuine enthusiasm for these human connection stories.`
+Once you have good details, suggest: "This sounds like a perfect memory to save! Would you like me to help you store this so we can look for potential matches?"
+
+${userName ? `Start by greeting ${userName} warmly.` : 'Be friendly and welcoming.'}`
           },
           ...conversationHistory,
           {
@@ -74,23 +101,42 @@ Always respond as MeetCute with genuine enthusiasm for these human connection st
     });
 
     console.log("OpenAI API response status:", response.status);
-    console.log("OpenAI API response ok:", response.ok);
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('OpenAI API error details:', errorText);
-      console.error('OpenAI API error:', response.status, errorText);
       throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log("OpenAI API response data:", data);
+    console.log("OpenAI API response received");
     const aiResponse = data.choices[0]?.message?.content || "I'm sorry, I had trouble processing that. Could you try again?";
-    console.log("Final AI response:", aiResponse);
-    console.log("=== CHAT-AI FUNCTION DEBUG SUCCESS ===");
+
+    // Check if the response contains structured memory data (for future enhancement)
+    let structuredResponse = {
+      chat_response: aiResponse
+    };
+
+    // If the user seems to be describing a detailed memory, we could extract structured data here
+    if (message.toLowerCase().includes('save') || message.toLowerCase().includes('store') || 
+        (message.length > 50 && (message.includes('saw') || message.includes('met') || message.includes('noticed')))) {
+      
+      // This could be enhanced to extract structured data using another API call
+      structuredResponse = {
+        chat_response: aiResponse,
+        memory_ready: true,
+        suggested_action: "save_memory"
+      };
+    }
+
+    console.log("=== CHAT-AI FUNCTION SUCCESS ===");
 
     return new Response(
-      JSON.stringify({ response: aiResponse }),
+      JSON.stringify({ 
+        response: structuredResponse.chat_response,
+        memory_ready: structuredResponse.memory_ready || false,
+        suggested_action: structuredResponse.suggested_action || null
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
