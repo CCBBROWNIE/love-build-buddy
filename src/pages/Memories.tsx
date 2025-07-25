@@ -18,9 +18,10 @@ interface Memory {
   extracted_time_period: string | null;
 }
 
-const Memories = () => {
+export default function Memories() {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMatching, setIsMatching] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -76,6 +77,39 @@ const Memories = () => {
         description: "Please try again later",
         variant: "destructive",
       });
+    }
+  };
+
+  const triggerManualMatching = async () => {
+    setIsMatching(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('manual-matcher', {});
+      
+      if (error) {
+        console.error('Manual matching error:', error);
+        toast({
+          title: "Matching failed",
+          description: "Could not run memory matching. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        console.log('Manual matching result:', data);
+        toast({
+          title: "Matching complete! ✨",
+          description: `Found ${data?.matches_created || 0} new matches.`,
+        });
+        // Reload memories to show updated statuses
+        await loadMemories();
+      }
+    } catch (error) {
+      console.error('Error running manual matcher:', error);
+      toast({
+        title: "Error",
+        description: "Something went wrong with memory matching.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsMatching(false);
     }
   };
 
@@ -188,11 +222,23 @@ const Memories = () => {
       <div className="p-4 space-y-6">
         {/* Matched Memories */}
         {matchedMemories.length > 0 && (
-          <div>
-            <div className="flex items-center mb-4">
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
               <Heart className="w-5 h-5 text-coral mr-2" />
               <h2 className="text-lg font-semibold">Matched Connections</h2>
             </div>
+            {waitingMemories.length > 0 && (
+              <Button 
+                onClick={triggerManualMatching}
+                disabled={isMatching}
+                size="sm"
+                variant="outline"
+              >
+                {isMatching ? "Matching..." : "Find Matches"}
+              </Button>
+            )}
+          </div>
             <div className="space-y-3">
               {matchedMemories.map(memory => (
                 <MemoryCard key={memory.id} memory={memory} />
@@ -239,5 +285,3 @@ const Memories = () => {
     </div>
   );
 };
-
-export default Memories;
