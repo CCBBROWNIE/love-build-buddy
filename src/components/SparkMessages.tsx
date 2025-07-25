@@ -58,15 +58,12 @@ const SparkMessages = () => {
     if (!user) return;
 
     try {
-      // Get accepted matches where both users confirmed OR where current user confirmed
-      // This allows matches to appear immediately after current user accepts
+      // Get accepted matches (both users have confirmed)
       const { data: matches, error } = await supabase
         .from('matches')
         .select('*')
         .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
-        .or(
-          `and(user1_id.eq.${user.id},user1_confirmed.eq.true),and(user2_id.eq.${user.id},user2_confirmed.eq.true),and(user1_confirmed.eq.true,user2_confirmed.eq.true)`
-        );
+        .eq('status', 'accepted');
 
       if (error) throw error;
 
