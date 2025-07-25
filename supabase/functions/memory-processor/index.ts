@@ -286,15 +286,16 @@ serve(async (req) => {
       }
     `;
 
+    console.log("Calling Anthropic API for memory extraction...");
     const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-API-Key': Deno.env.get('ANTHROPIC_API_KEY')!,
+        'X-API-Key': anthropicKey!,
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-3-haiku-20240307',
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
         messages: [
           { role: 'user', content: extractionPrompt }
@@ -303,10 +304,14 @@ serve(async (req) => {
     });
 
     if (!claudeResponse.ok) {
-      throw new Error(`Claude API error: ${claudeResponse.status}`);
+      const errorText = await claudeResponse.text();
+      console.error('Anthropic API error:', errorText);
+      throw new Error(`Anthropic API error: ${claudeResponse.status} - ${errorText}`);
     }
 
     const claudeData = await claudeResponse.json();
+    console.log("Raw Anthropic response:", claudeData);
+
     const extractedText = claudeData.content[0].text;
     
     console.log('Claude extraction response:', extractedText);

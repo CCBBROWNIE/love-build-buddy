@@ -285,8 +285,8 @@ const Chat = () => {
       // Create a conversation text from all user messages
       const conversationText = userMessages.map(msg => msg.text).join(" ");
       
-      // Call the simple-memory-saver edge function temporarily
-      const { data, error } = await supabase.functions.invoke('simple-memory-saver', {
+      // Call the memory-processor edge function (enhanced with AI matching)
+      const { data, error } = await supabase.functions.invoke('memory-processor', {
         body: {
           conversation: conversationText,
           userId: user.id,
