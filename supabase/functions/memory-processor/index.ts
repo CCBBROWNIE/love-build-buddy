@@ -94,6 +94,10 @@ serve(async (req) => {
   const clientIP = getClientIP(req);
   const userAgent = req.headers.get('user-agent') || 'unknown';
   
+  console.log("=== MEMORY PROCESSOR START ===");
+  console.log("Method:", req.method);
+  console.log("Client IP:", clientIP);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -102,6 +106,24 @@ serve(async (req) => {
   // Initialize Supabase client first for logging
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
+  
+  console.log("Supabase URL exists:", !!supabaseUrl);
+  console.log("Supabase Key exists:", !!supabaseKey);
+  console.log("Anthropic Key exists:", !!anthropicKey);
+  console.log("Anthropic Key length:", anthropicKey?.length || 0);
+  
+  if (!anthropicKey) {
+    console.error("ANTHROPIC_API_KEY not found");
+    return new Response(
+      JSON.stringify({ error: 'ANTHROPIC_API_KEY not configured', success: false }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+  
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   // Only allow POST requests
