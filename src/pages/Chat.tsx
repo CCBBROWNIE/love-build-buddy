@@ -69,7 +69,7 @@ const Chat = () => {
       console.log("Previous messages:", conversationHistory);
       console.log("About to call supabase.functions.invoke...");
 
-      const { data, error } = await supabase.functions.invoke('test-chat', {
+      const { data, error } = await supabase.functions.invoke('chat-ai', {
         body: {
           message: userMessage,
           conversationHistory: conversationHistory
