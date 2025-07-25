@@ -176,11 +176,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "Signed out",
-      description: "You've been signed out successfully."
-    });
+    try {
+      // Force clear local session first to prevent UI issues
+      setSession(null);
+      setUser(null);
+      
+      // Attempt to sign out from Supabase
+      await supabase.auth.signOut();
+      
+      // Clear any remaining localStorage items
+      localStorage.removeItem('supabase.auth.token');
+      
+      toast({
+        title: "Signed out",
+        description: "You've been signed out successfully."
+      });
+    } catch (error) {
+      // Even if signOut fails, clear local state
+      setSession(null);
+      setUser(null);
+      localStorage.removeItem('supabase.auth.token');
+      
+      toast({
+        title: "Signed out",
+        description: "You've been signed out successfully."
+      });
+    }
   };
 
   const verifyEmail = async (email: string, code: string) => {
