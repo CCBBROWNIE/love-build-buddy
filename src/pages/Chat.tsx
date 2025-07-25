@@ -184,7 +184,7 @@ const Chat = () => {
   };
 
   return (
-    <div className="h-screen bg-gradient-subtle flex flex-col">
+    <div className="h-screen bg-gradient-subtle flex flex-col pb-20"> {/* Added pb-20 for navigation space */}
       {/* Header */}
       <div className="glass border-b backdrop-blur-lg p-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
