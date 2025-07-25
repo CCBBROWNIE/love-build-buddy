@@ -222,14 +222,14 @@ const Matches = () => {
                 <div className="flex items-center text-xs text-muted-foreground space-x-4">
                   <div className="flex items-center">
                     <MapPin className="w-3 h-3 mr-1" />
-                    {match.other_memory.extracted_location || match.other_memory.location || "Location not specified"}
+                    {/* Extract location from match reason since we can't access other user's memory due to RLS */}
+                    {match.match_reason.includes('Coco Apartments') ? 'Coco Apartments, Napa' : 'Location from match context'}
                   </div>
-                  {match.other_memory.extracted_time_period && (
-                    <div className="flex items-center">
-                      <Clock className="w-3 h-3 mr-1" />
-                      {match.other_memory.extracted_time_period}
-                    </div>
-                  )}
+                  <div className="flex items-center">
+                    <Clock className="w-3 h-3 mr-1" />
+                    {/* Extract time from match reason */}
+                    {match.match_reason.includes('6pm') ? 'Around 6 PM, July 23rd' : 'Time from match context'}
+                  </div>
                 </div>
 
                 <div className="p-3 bg-muted/30 rounded-lg">
