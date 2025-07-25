@@ -34,9 +34,9 @@ interface Conversation {
 }
 
 export default function PrivateChat() {
-  console.log('PrivateChat component loaded');
+  console.log('=== PRIVATE CHAT COMPONENT RENDERING ===');
   const { conversationId, userId } = useParams();
-  console.log('Route params:', { conversationId, userId });
+  console.log('=== ROUTE PARAMS ===', { conversationId, userId });
   const navigate = useNavigate();
   const { user, session } = useAuth();
   const { toast } = useToast();
