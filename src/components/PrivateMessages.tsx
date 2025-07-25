@@ -105,7 +105,12 @@ const PrivateMessages = () => {
           })
         );
 
-        setConversations(conversationsWithProfiles);
+        // Remove duplicates based on conversation ID
+        const uniqueConversations = conversationsWithProfiles.filter((conv, index, self) => 
+          index === self.findIndex(c => c.id === conv.id)
+        );
+
+        setConversations(uniqueConversations);
       }
     } catch (error) {
       console.error('Error loading conversations:', error);
