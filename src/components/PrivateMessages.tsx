@@ -138,13 +138,13 @@ const PrivateMessages = () => {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-4">
+    <div className="flex-1 overflow-y-auto">
       {conversations.length > 0 ? (
-        <div className="space-y-3">
+        <div className="space-y-1 p-0">
           {conversations.map((conversation) => (
             <Card 
               key={conversation.id} 
-              className="p-4 hover:shadow-lg transition-shadow cursor-pointer"
+              className="p-4 hover:bg-accent/50 transition-colors cursor-pointer border-0 border-b border-border/50 rounded-none first:rounded-t-lg last:rounded-b-lg"
               onClick={() => handleConversationClick(conversation.id)}
             >
               <div className="flex items-center space-x-3">
