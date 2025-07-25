@@ -48,8 +48,15 @@ export default function PrivateChat() {
   const otherParticipant = conversation?.participants.find(p => p.user_id !== user?.id);
 
   useEffect(() => {
-    if (!user || !session) {
-      console.log('Missing auth:', { user: !!user, session: !!session });
+    console.log('useEffect triggered:', { 
+      user: !!user, 
+      session: !!session, 
+      userId: userId,
+      conversationId: conversationId 
+    });
+    
+    if (!user) {
+      console.log('No user, skipping initialization');
       return;
     }
 
@@ -89,10 +96,18 @@ export default function PrivateChat() {
             // Create new conversation
             console.log('Creating new conversation...');
             
-            // Debug: Check authentication state
-            const { data: authData } = await supabase.auth.getUser();
-            console.log('Auth state:', { user: authData.user?.id, email: authData.user?.email });
+            // Debug: Check authentication state and force session refresh
+            const { data: authData, error: authError } = await supabase.auth.getUser();
+            console.log('Auth state:', { user: authData.user?.id, email: authData.user?.email, error: authError });
             
+            if (!authData.user) {
+              console.error('User not authenticated, forcing refresh...');
+              await supabase.auth.refreshSession();
+              const { data: refreshedAuth } = await supabase.auth.getUser();
+              console.log('After refresh:', { user: refreshedAuth.user?.id });
+            }
+            
+            // Try creating conversation with explicit headers
             const { data: newConversation, error: conversationError } = await supabase
               .from('conversations')
               .insert({})
@@ -189,7 +204,7 @@ export default function PrivateChat() {
     };
 
     initializeConversation();
-  }, [user, conversationId, userId, navigate, toast]);
+  }, [user, session, conversationId, userId, navigate, toast]);
 
   useEffect(() => {
     const currentConversationId = conversationId || conversation?.id;
