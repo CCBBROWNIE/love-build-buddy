@@ -23,6 +23,8 @@ serve(async (req) => {
     // Get OpenAI API key
     const openaiKey = Deno.env.get('OPENAI_API_KEY');
     console.log("OpenAI key exists:", !!openaiKey);
+    console.log("OpenAI key length:", openaiKey?.length || 0);
+    console.log("OpenAI key starts with:", openaiKey?.substring(0, 7) || 'none');
     
     if (!openaiKey) {
       console.error("OPENAI_API_KEY not found");
