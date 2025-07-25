@@ -133,24 +133,28 @@ export function VerificationSelfie({ onSelfieUploaded, currentSelfieUrl, onVerif
         return;
       }
 
-      // Simulate identity verification process
-      // In a real app, this would send both images to an AI service for comparison
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Update verification status
-      const { error: verificationError } = await supabase
-        .from('profiles')
-        .update({ is_verified: true })
-        .eq('user_id', user.id);
-
-      if (verificationError) throw verificationError;
-
-      toast({
-        title: "Identity verified!",
-        description: "Your identity has been successfully verified.",
+      // Call our face verification edge function
+      const { data, error } = await supabase.functions.invoke('face-verification', {
+        body: { userId: user.id }
       });
-
-      onVerificationComplete?.();
+      
+      if (error) throw error;
+      
+      if (data.verified) {
+        toast({
+          title: "Identity Verified!",
+          description: `Verification successful with ${data.confidence}% confidence.`,
+        });
+        onVerificationComplete();
+        return;
+      } else {
+        toast({
+          title: "Verification Failed",
+          description: data.reasoning || "The photos don't appear to be of the same person. Please retake your verification selfie.",
+          variant: "destructive",
+        });
+        return;
+      }
 
     } catch (error: any) {
       console.error('Verification error:', error);
@@ -192,28 +196,16 @@ export function VerificationSelfie({ onSelfieUploaded, currentSelfieUrl, onVerif
             )}
           </div>
 
-          {/* Camera and Upload Buttons */}
-          <div className="flex gap-2 w-full">
-            <Button
-              onClick={() => setShowCameraModal(true)}
-              disabled={uploading}
-              variant="default"
-              className="flex-1"
-            >
-              <Camera className="w-4 h-4 mr-2" />
-              {uploading ? 'Uploading...' : 'Take Selfie'}
-            </Button>
-            
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              variant="outline"
-              className="flex-1"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Upload Photo
-            </Button>
-          </div>
+          {/* Take Selfie Button */}
+          <Button
+            onClick={() => setShowCameraModal(true)}
+            disabled={uploading}
+            variant="default"
+            className="w-full"
+          >
+            <Camera className="w-4 h-4 mr-2" />
+            {uploading ? 'Uploading...' : 'Take Verification Selfie'}
+          </Button>
 
           {/* Verify Button */}
           {currentSelfieUrl && (
