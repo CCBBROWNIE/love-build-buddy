@@ -137,28 +137,45 @@ export function VerificationSelfie({ onSelfieUploaded, currentSelfieUrl, onVerif
       
       // Call our face verification edge function
       console.log('Calling face-verification function...');
-      const { data, error } = await supabase.functions.invoke('face-verification', {
-        body: { userId: user.id }
-      });
       
-      console.log('Face verification response:', { data, error });
-      
-      if (error) {
-        console.error('Face verification error:', error);
-        throw error;
-      }
-      
-      if (data.verified) {
-        toast({
-          title: "Identity Verified!",
-          description: `Verification successful with ${data.confidence}% confidence.`,
+      try {
+        const { data, error } = await supabase.functions.invoke('face-verification', {
+          body: { userId: user.id }
         });
-        onVerificationComplete();
-        return;
-      } else {
+        
+        console.log('Face verification response data:', data);
+        console.log('Face verification response error:', error);
+        
+        if (error) {
+          console.error('Supabase function error:', error);
+          toast({
+            title: "Function Error",
+            description: `Error: ${error.message || 'Unknown error'}`,
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        if (data && data.verified) {
+          toast({
+            title: "Identity Verified!",
+            description: data.reasoning || "Verification successful!",
+          });
+          onVerificationComplete();
+          return;
+        } else {
+          toast({
+            title: "Verification Failed",
+            description: data?.reasoning || "Verification failed for unknown reason.",
+            variant: "destructive",
+          });
+          return;
+        }
+      } catch (networkError) {
+        console.error('Network/other error:', networkError);
         toast({
-          title: "Verification Failed",
-          description: data.reasoning || "The photos don't appear to be of the same person. Please retake your verification selfie.",
+          title: "Connection Error",
+          description: `Network error: ${networkError.message}`,
           variant: "destructive",
         });
         return;
