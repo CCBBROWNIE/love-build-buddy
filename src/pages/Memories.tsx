@@ -27,6 +27,7 @@ const Memories = () => {
   const loadMemories = async () => {
     if (!user) return;
     
+    console.log("Loading memories for user:", user?.id);
     try {
       const { data, error } = await supabase
         .from('memories')
@@ -34,6 +35,7 @@ const Memories = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
+      console.log("Memories query result:", { data, error });
       if (error) throw error;
       setMemories(data || []);
     } catch (error) {
