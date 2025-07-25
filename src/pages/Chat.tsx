@@ -203,6 +203,7 @@ const Chat = () => {
       return;
     }
 
+    console.log("=== SAVING MEMORY START ===");
     setIsSaving(true);
     
     try {
