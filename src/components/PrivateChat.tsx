@@ -49,164 +49,136 @@ export default function PrivateChat() {
 
   const otherParticipant = conversation?.participants.find(p => p.user_id !== user?.id);
 
+  // Simple test - just create conversation immediately if we're on /new route
   useEffect(() => {
-    console.log('useEffect triggered:', { 
-      user: !!user, 
-      session: !!session, 
-      userId: userId,
-      conversationId: conversationId 
-    });
+    console.log('PrivateChat useEffect - Route params:', { conversationId, userId });
+    console.log('PrivateChat useEffect - Auth state:', { user: !!user, session: !!session });
     
     if (!user) {
-      console.log('No user, skipping initialization');
+      console.log('No user - waiting for auth');
       return;
     }
 
-    const initializeConversation = async () => {
-      try {
-        let currentConversationId = conversationId;
+    // If we're on the /new route and have a userId, create conversation immediately  
+    if (!conversationId && userId) {
+      console.log('Creating conversation between', user.id, 'and', userId);
+      createConversationNow();
+    } else if (conversationId) {
+      console.log('Loading existing conversation:', conversationId);
+      loadConversation(conversationId);
+    }
+  }, [user, conversationId, userId]);
 
-        // If no conversationId but we have a userId, create or find conversation
-        if (!conversationId && userId) {
-          // Check if conversation already exists between these users
-          console.log('Looking for existing conversation between:', user.id, 'and', userId);
-          
-          const { data: userParticipations } = await supabase
-            .from('conversation_participants')
-            .select('conversation_id')
-            .eq('user_id', user.id);
+  const createConversationNow = async () => {
+    try {
+      // Create new conversation
+      console.log('Creating new conversation...');
+      
+      const { data: newConversation, error: conversationError } = await supabase
+        .from('conversations')
+        .insert({})
+        .select()
+        .single();
 
-          const { data: otherUserParticipations } = await supabase
-            .from('conversation_participants')
-            .select('conversation_id')
-            .eq('user_id', userId);
-
-          // Find common conversation IDs
-          const userConversationIds = userParticipations?.map(p => p.conversation_id) || [];
-          const otherUserConversationIds = otherUserParticipations?.map(p => p.conversation_id) || [];
-          const commonConversationIds = userConversationIds.filter(id => 
-            otherUserConversationIds.includes(id)
-          );
-
-          console.log('Common conversation IDs:', commonConversationIds);
-
-          if (commonConversationIds.length > 0) {
-            currentConversationId = commonConversationIds[0];
-            console.log('Found existing conversation:', currentConversationId);
-            navigate(`/private-chat/${currentConversationId}`, { replace: true });
-          } else {
-            // Create new conversation
-            console.log('Creating new conversation...');
-            
-            // Debug: Check authentication state and force session refresh
-            const { data: authData, error: authError } = await supabase.auth.getUser();
-            console.log('Auth state:', { user: authData.user?.id, email: authData.user?.email, error: authError });
-            
-            if (!authData.user) {
-              console.error('User not authenticated, forcing refresh...');
-              await supabase.auth.refreshSession();
-              const { data: refreshedAuth } = await supabase.auth.getUser();
-              console.log('After refresh:', { user: refreshedAuth.user?.id });
-            }
-            
-            // Try creating conversation with explicit headers
-            const { data: newConversation, error: conversationError } = await supabase
-              .from('conversations')
-              .insert({})
-              .select()
-              .single();
-
-            if (conversationError) {
-              console.error('Error creating conversation:', conversationError);
-              throw conversationError;
-            }
-
-            console.log('Created conversation:', newConversation.id);
-
-            // Add participants
-            const { error: participantsError } = await supabase
-              .from('conversation_participants')
-              .insert([
-                { conversation_id: newConversation.id, user_id: user.id },
-                { conversation_id: newConversation.id, user_id: userId }
-              ]);
-
-            if (participantsError) {
-              console.error('Error adding participants:', participantsError);
-              throw participantsError;
-            }
-
-            console.log('Added participants successfully');
-            currentConversationId = newConversation.id;
-            navigate(`/private-chat/${currentConversationId}`, { replace: true });
-          }
-        }
-
-        if (currentConversationId) {
-          // Load conversation details
-          const { data: conversationData, error: conversationError } = await supabase
-            .from('conversations')
-            .select(`
-              id,
-              conversation_participants!inner (
-                user_id,
-                profiles!inner (
-                  first_name,
-                  last_name,
-                  profile_photo_url
-                )
-              )
-            `)
-            .eq('id', currentConversationId)
-            .single();
-
-          if (conversationError) throw conversationError;
-
-          setConversation({
-            id: conversationData.id,
-            participants: conversationData.conversation_participants.map((cp: any) => ({
-              user_id: cp.user_id,
-              profile: cp.profiles
-            }))
-          });
-
-          // Load messages with separate profile query
-          const { data: messagesData, error: messagesError } = await supabase
-            .from('messages')
-            .select('id, content, sender_id, created_at')
-            .eq('conversation_id', currentConversationId)
-            .order('created_at', { ascending: true });
-
-          if (messagesError) throw messagesError;
-
-          // Get profiles for all message senders
-          const senderIds = [...new Set(messagesData.map(msg => msg.sender_id))];
-          const { data: profiles } = await supabase
-            .from('profiles')
-            .select('user_id, first_name, profile_photo_url')
-            .in('user_id', senderIds);
-
-          const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
-
-          setMessages(messagesData.map((msg: any) => ({
-            ...msg,
-            sender_profile: profileMap.get(msg.sender_id)
-          })));
-        }
-
-      } catch (error: any) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
+      if (conversationError) {
+        console.error('Error creating conversation:', conversationError);
+        throw conversationError;
       }
-    };
 
-    initializeConversation();
-  }, [user, session, conversationId, userId, navigate, toast]);
+      console.log('Created conversation:', newConversation.id);
+
+      // Add participants
+      const { error: participantsError } = await supabase
+        .from('conversation_participants')
+        .insert([
+          { conversation_id: newConversation.id, user_id: user.id },
+          { conversation_id: newConversation.id, user_id: userId }
+        ]);
+
+      if (participantsError) {
+        console.error('Error adding participants:', participantsError);
+        throw participantsError;
+      }
+
+      console.log('Added participants successfully');
+      navigate(`/private-chat/${newConversation.id}`, { replace: true });
+      
+    } catch (error: any) {
+      console.error('Error in createConversationNow:', error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadConversation = async (convId: string) => {
+    try {
+      // Load conversation details
+      const { data: conversationData, error: conversationError } = await supabase
+        .from('conversations')
+        .select(`
+          id,
+          conversation_participants!inner (
+            user_id,
+            profiles!inner (
+              first_name,
+              last_name,
+              profile_photo_url
+            )
+          )
+        `)
+        .eq('id', convId)
+        .single();
+
+      if (conversationError) throw conversationError;
+
+      setConversation({
+        id: conversationData.id,
+        participants: conversationData.conversation_participants.map((cp: any) => ({
+          user_id: cp.user_id,
+          profile: cp.profiles
+        }))
+      });
+
+      // Load messages
+      const { data: messagesData, error: messagesError } = await supabase
+        .from('messages')
+        .select('id, content, sender_id, created_at')
+        .eq('conversation_id', convId)
+        .order('created_at', { ascending: true });
+
+      if (messagesError) throw messagesError;
+
+      // Get profiles for all message senders
+      const senderIds = [...new Set(messagesData.map(msg => msg.sender_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, profile_photo_url')
+        .in('user_id', senderIds);
+
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+
+      setMessages(messagesData.map((msg: any) => ({
+        ...msg,
+        sender_profile: profileMap.get(msg.sender_id)
+      })));
+      
+    } catch (error: any) {
+      console.error('Error loading conversation:', error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
 
   useEffect(() => {
     const currentConversationId = conversationId || conversation?.id;
