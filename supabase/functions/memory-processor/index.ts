@@ -99,8 +99,38 @@ serve(async (req) => {
 
     console.log('Memory saved successfully:', memory.id);
 
-    // TODO: In the future, we could add AI matching logic here
-    // to check for similar memories from other users and create matches
+    // Automatically trigger memory matching
+    try {
+      const matchResponse = await fetch(`${supabaseUrl}/functions/v1/memory-matcher`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          memory_text: conversation,
+          user_id: userId,
+          location: extractedLocation,
+          time_period: extractedTimePeriod
+        })
+      });
+
+      if (matchResponse.ok) {
+        const matchResult = await matchResponse.json();
+        console.log('Memory matching completed:', matchResult);
+        
+        if (matchResult.matches_found > 0) {
+          // Update memory status to matched if matches were found
+          await supabase
+            .from('memories')
+            .update({ status: 'matched' })
+            .eq('id', memory.id);
+        }
+      }
+    } catch (matchError) {
+      console.error('Error during memory matching:', matchError);
+      // Don't fail the whole request if matching fails
+    }
 
     return new Response(
       JSON.stringify({ 
