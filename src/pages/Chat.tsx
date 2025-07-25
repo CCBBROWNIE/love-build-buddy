@@ -74,8 +74,7 @@ const Chat = () => {
       const { data, error } = await supabase.functions.invoke('chat-ai', {
         body: {
           message: userMessage,
-          conversationHistory: conversationHistory,
-          userId: user?.id
+          conversationHistory: conversationHistory
         }
       });
 
