@@ -165,12 +165,17 @@ const Matches = () => {
         // Remove the match from the list
         setMatches(prev => prev.filter(m => m.id !== matchId));
 
-        // Create conversation and navigate to chat after animation
+        // Create conversation and navigate to spark messages after animation
         const conversationId = await createConversation(otherUserId);
         
         setTimeout(() => {
           setShowSparkAnimation(false);
-          navigate(`/chat/${conversationId}`);
+          navigate('/chat', { replace: true });
+          // Small delay to ensure navigation completes before changing tab
+          setTimeout(() => {
+            // Trigger tab change to sparks - we'll need to pass this via state or context
+            window.dispatchEvent(new CustomEvent('openSparkMessages'));
+          }, 100);
         }, 4000); // Match the 4-second animation duration
 
         toast({
