@@ -47,14 +47,14 @@ const Matches = () => {
     if (!user) return;
     
     try {
-      // Get pending matches where NOT both users have confirmed
-      // (hide matches where both users already confirmed and are messaging)
+      // Get pending matches where the CURRENT USER hasn't confirmed yet
+      // Once user responds, match disappears from their Matches tab
       const { data: allMatches, error } = await supabase
         .from('matches')
         .select('*')
         .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
         .eq('status', 'pending')
-        .or('user1_confirmed.eq.false,user2_confirmed.eq.false,user1_confirmed.is.null,user2_confirmed.is.null');
+        .or(`and(user1_id.eq.${user.id},user1_confirmed.neq.true),and(user2_id.eq.${user.id},user2_confirmed.neq.true)`);
 
       if (error) throw error;
 
