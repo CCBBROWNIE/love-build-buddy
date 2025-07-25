@@ -184,9 +184,9 @@ const Chat = () => {
   };
 
   return (
-    <div className="h-screen bg-gradient-subtle flex flex-col"> {/* Removed pb-20 */}
+    <div className="h-screen bg-gradient-to-br from-background via-primary/5 to-background flex flex-col"> {/* Fixed background gradient */}
       {/* Header */}
-      <div className="glass border-b backdrop-blur-lg p-4">
+      <div className="bg-background/95 border-b border-border/50 backdrop-blur-lg p-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="ai" className="flex items-center gap-2">
@@ -307,7 +307,7 @@ const Chat = () => {
             </div>
 
             {/* AI Input - Fixed at bottom */}
-            <div className="border-t border-border/50 glass backdrop-blur-lg p-4 mb-20"> {/* Added mb-20 for space above navigation */}
+            <div className="border-t border-border/50 bg-background/95 backdrop-blur-lg p-4 mb-20"> {/* Consistent background */}
               <div className="flex items-center space-x-3">
                 <Button
                   variant="outline"
