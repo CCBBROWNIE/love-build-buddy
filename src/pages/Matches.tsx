@@ -47,20 +47,28 @@ const Matches = () => {
     if (!user) return;
     
     try {
-      // Get pending matches where the CURRENT USER hasn't confirmed yet
-      // Once user responds, match disappears from their Matches tab
+      // Get ALL pending matches first
       const { data: allMatches, error } = await supabase
         .from('matches')
         .select('*')
         .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
-        .eq('status', 'pending')
-        .or(`and(user1_id.eq.${user.id},user1_confirmed.neq.true),and(user2_id.eq.${user.id},user2_confirmed.neq.true)`);
+        .eq('status', 'pending');
 
       if (error) throw error;
 
-      // For each match, get the other user's memory and profile
+      // Filter out matches where current user has already responded
+      const unrespondedMatches = (allMatches || []).filter(match => {
+        const isUser1 = match.user1_id === user.id;
+        if (isUser1) {
+          return !match.user1_confirmed; // Show only if user1 hasn't confirmed
+        } else {
+          return !match.user2_confirmed; // Show only if user2 hasn't confirmed
+        }
+      });
+
+      // For each unresponded match, get the other user's memory and profile
       const enrichedMatches = await Promise.all(
-        (allMatches || []).map(async (match) => {
+        (unrespondedMatches || []).map(async (match) => {
           const isUser1 = match.user1_id === user.id;
           const otherUserId = isUser1 ? match.user2_id : match.user1_id;
           const otherMemoryId = isUser1 ? match.memory2_id : match.memory1_id;
