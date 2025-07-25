@@ -542,7 +542,15 @@ const VideoFeed = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setIsMuted(!isMuted)}
+                onClick={() => {
+                  setIsMuted(!isMuted);
+                  // Update all video elements immediately
+                  videoRefs.current.forEach(video => {
+                    if (video) {
+                      video.muted = !isMuted;
+                    }
+                  });
+                }}
                 className="bg-black/30 hover:bg-black/50 text-white p-2 rounded-full"
               >
                 {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
