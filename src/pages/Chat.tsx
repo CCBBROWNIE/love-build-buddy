@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sparkles, Send, Mic, MicOff, Volume2, VolumeX, Settings, MessageCircle, Users } from "lucide-react";
+import { Sparkles, Send, Mic, MicOff, Volume2, VolumeX, Settings, MessageCircle, Users, Save, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +28,8 @@ const Chat = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [savedConversations, setSavedConversations] = useState<Set<string>>(new Set());
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -191,6 +193,81 @@ const Chat = () => {
     // Here you'd implement text-to-speech
   };
 
+  const saveConversationAsMemory = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to save memories.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    
+    try {
+      // Get the user's messages (excluding AI responses and typing indicators)
+      const userMessages = messages.filter(msg => msg.sender === "user" && !msg.typing);
+      
+      if (userMessages.length === 0) {
+        toast({
+          title: "No conversation to save",
+          description: "Start a conversation with the AI first.",
+          variant: "destructive",
+        });
+        setIsSaving(false);
+        return;
+      }
+
+      // Create a conversation text from all user messages
+      const conversationText = userMessages.map(msg => msg.text).join(" ");
+      
+      // Call the memory-processor edge function
+      const { data, error } = await supabase.functions.invoke('memory-processor', {
+        body: {
+          conversation: conversationText,
+          userId: user.id,
+        }
+      });
+
+      if (error) {
+        console.error('Memory processing error:', error);
+        throw new Error(error.message || 'Failed to process memory');
+      }
+
+      // Mark this conversation as saved
+      const conversationId = userMessages.map(m => m.id).join('-');
+      setSavedConversations(prev => new Set([...prev, conversationId]));
+
+      toast({
+        title: "Memory saved successfully! ✨",
+        description: "Your conversation has been processed and saved to your memories.",
+      });
+
+      // Navigate to memories page to show the saved memory
+      setTimeout(() => {
+        navigate('/memories');
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error saving memory:', error);
+      toast({
+        title: "Error saving memory",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Check if the current conversation can be saved
+  const canSaveConversation = () => {
+    const userMessages = messages.filter(msg => msg.sender === "user" && !msg.typing);
+    const conversationId = userMessages.map(m => m.id).join('-');
+    return userMessages.length > 0 && !savedConversations.has(conversationId) && !isTyping;
+  };
+
   return (
     <div className="h-screen bg-gradient-to-br from-background via-primary/5 to-background flex flex-col"> {/* Fixed background gradient */}
       {/* Header */}
@@ -352,6 +429,31 @@ const Chat = () => {
                   <Send className="w-4 h-4" />
                 </Button>
               </div>
+              
+              {/* Save Memory Button */}
+              {canSaveConversation() && (
+                <div className="flex justify-center mt-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={saveConversationAsMemory}
+                    disabled={isSaving}
+                    className="rounded-xl border-spark/50 text-spark hover:bg-spark/10 transition-all duration-300"
+                  >
+                    {isSaving ? (
+                      <>
+                        <div className="w-4 h-4 animate-spin rounded-full border-2 border-spark/30 border-t-spark mr-2" />
+                        Saving Memory...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        Save as Memory
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
               
               <div className="text-center mt-2">
                 <p className="text-xs text-muted-foreground">
