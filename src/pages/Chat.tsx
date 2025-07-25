@@ -33,6 +33,42 @@ const Chat = () => {
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Load persisted chat messages on component mount
+  useEffect(() => {
+    const savedMessages = localStorage.getItem('meetcute-chat-messages');
+    const savedConversationsData = localStorage.getItem('meetcute-saved-conversations');
+    
+    if (savedMessages) {
+      try {
+        const parsedMessages = JSON.parse(savedMessages);
+        setMessages(parsedMessages);
+      } catch (error) {
+        console.error('Error loading saved messages:', error);
+      }
+    }
+    
+    if (savedConversationsData) {
+      try {
+        const parsedSavedConversations = JSON.parse(savedConversationsData);
+        setSavedConversations(new Set(parsedSavedConversations));
+      } catch (error) {
+        console.error('Error loading saved conversations:', error);
+      }
+    }
+  }, []);
+
+  // Save messages to localStorage whenever messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem('meetcute-chat-messages', JSON.stringify(messages));
+    }
+  }, [messages]);
+
+  // Save savedConversations to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('meetcute-saved-conversations', JSON.stringify(Array.from(savedConversations)));
+  }, [savedConversations]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
