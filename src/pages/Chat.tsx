@@ -41,7 +41,12 @@ const Chat = () => {
     if (savedMessages) {
       try {
         const parsedMessages = JSON.parse(savedMessages);
-        setMessages(parsedMessages);
+        // Convert timestamp strings back to Date objects
+        const messagesWithDates = parsedMessages.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+        setMessages(messagesWithDates);
       } catch (error) {
         console.error('Error loading saved messages:', error);
       }
