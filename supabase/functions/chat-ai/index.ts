@@ -18,27 +18,29 @@ serve(async (req) => {
     console.log("Received message:", message);
     console.log("Conversation history:", conversationHistory);
     
-    const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
+    const apiKey = Deno.env.get('OPENAI_API_KEY');
     console.log("API key exists:", !!apiKey);
     console.log("API key length:", apiKey?.length || 0);
     
     if (!apiKey) {
-      console.error("ANTHROPIC_API_KEY not configured");
-      throw new Error('ANTHROPIC_API_KEY not configured');
+      console.error("OPENAI_API_KEY not configured");
+      throw new Error('OPENAI_API_KEY not configured');
     }
 
-    console.log("About to call Anthropic API...");
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    console.log("About to call OpenAI API...");
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'X-API-Key': apiKey,
-        'Content-Type': 'application/json',
-        'anthropic-version': '2023-06-01'
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'claude-3-sonnet-20240229',
+        model: 'gpt-4.1-2025-04-14',
         max_tokens: 400,
-        system: `You are MeetCute, an AI assistant that helps people reconnect with someone they briefly encountered but never got to properly meet. You're warm, enthusiastic, and genuinely excited about these spark moments between people.
+        messages: [
+          {
+            role: 'system',
+            content: `You are MeetCute, an AI assistant that helps people reconnect with someone they briefly encountered but never got to properly meet. You're warm, enthusiastic, and genuinely excited about these spark moments between people.
 
 Your personality:
 - Warm, friendly, and genuinely excited about human connections
@@ -60,8 +62,8 @@ Key conversation flow:
 3. Once they have a detailed memory, suggest: "This sounds like a perfect memory to save! Would you like me to help you store this so we can look for potential matches?"
 4. If they agree, tell them to go to the Memories page to submit their detailed story
 
-Always respond as MeetCute with genuine enthusiasm for these human connection stories.`,
-        messages: [
+Always respond as MeetCute with genuine enthusiasm for these human connection stories.`
+          },
           ...conversationHistory,
           {
             role: 'user',
@@ -71,19 +73,19 @@ Always respond as MeetCute with genuine enthusiasm for these human connection st
       }),
     });
 
-    console.log("Anthropic API response status:", response.status);
-    console.log("Anthropic API response ok:", response.ok);
+    console.log("OpenAI API response status:", response.status);
+    console.log("OpenAI API response ok:", response.ok);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Anthropic API error details:', errorText);
-      console.error('Claude API error:', response.status, errorText);
-      throw new Error(`Claude API error: ${response.status} - ${errorText}`);
+      console.error('OpenAI API error details:', errorText);
+      console.error('OpenAI API error:', response.status, errorText);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log("Anthropic API response data:", data);
-    const aiResponse = data.content[0]?.text || "I'm sorry, I had trouble processing that. Could you try again?";
+    console.log("OpenAI API response data:", data);
+    const aiResponse = data.choices[0]?.message?.content || "I'm sorry, I had trouble processing that. Could you try again?";
     console.log("Final AI response:", aiResponse);
     console.log("=== CHAT-AI FUNCTION DEBUG SUCCESS ===");
 
