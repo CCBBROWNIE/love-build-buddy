@@ -12,7 +12,7 @@ const SparkAnimation = ({ onComplete }: SparkAnimationProps) => {
     const timer = setTimeout(() => {
       setIsVisible(false);
       onComplete?.();
-    }, 2000);
+    }, 4000); // Extended to 4 seconds
 
     return () => clearTimeout(timer);
   }, [onComplete]);

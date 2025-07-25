@@ -171,7 +171,7 @@ const Matches = () => {
         setTimeout(() => {
           setShowSparkAnimation(false);
           navigate(`/chat/${conversationId}`);
-        }, 2000);
+        }, 4000); // Match the 4-second animation duration
 
         toast({
           title: "Match accepted!",
