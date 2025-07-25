@@ -117,30 +117,33 @@ export default function PrivateChat() {
 
   const loadConversation = async (convId: string) => {
     try {
-      // Load conversation details
-      const { data: conversationData, error: conversationError } = await supabase
-        .from('conversations')
-        .select(`
-          id,
-          conversation_participants!inner (
-            user_id,
-            profiles!inner (
-              first_name,
-              last_name,
-              profile_photo_url
-            )
-          )
-        `)
-        .eq('id', convId)
-        .single();
+      // Load conversation participants separately (no foreign key relationship defined)
+      const { data: participantsData, error: participantsError } = await supabase
+        .from('conversation_participants')
+        .select('user_id')
+        .eq('conversation_id', convId);
 
-      if (conversationError) throw conversationError;
+      if (participantsError) throw participantsError;
 
+      // Get profiles for participants
+      const userIds = participantsData.map(p => p.user_id);
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name, profile_photo_url')
+        .in('user_id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Create conversation object
       setConversation({
-        id: conversationData.id,
-        participants: conversationData.conversation_participants.map((cp: any) => ({
-          user_id: cp.user_id,
-          profile: cp.profiles
+        id: convId,
+        participants: profilesData.map(profile => ({
+          user_id: profile.user_id,
+          profile: {
+            first_name: profile.first_name,
+            last_name: profile.last_name,
+            profile_photo_url: profile.profile_photo_url
+          }
         }))
       });
 
