@@ -47,12 +47,14 @@ const Matches = () => {
     if (!user) return;
     
     try {
-      // Get all matches where current user is involved
+      // Get pending matches where NOT both users have confirmed
+      // (hide matches where both users already confirmed and are messaging)
       const { data: allMatches, error } = await supabase
         .from('matches')
         .select('*')
         .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
-        .eq('status', 'pending');
+        .eq('status', 'pending')
+        .or('user1_confirmed.eq.false,user2_confirmed.eq.false,user1_confirmed.is.null,user2_confirmed.is.null');
 
       if (error) throw error;
 
