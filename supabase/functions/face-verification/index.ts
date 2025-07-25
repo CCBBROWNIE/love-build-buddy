@@ -55,6 +55,26 @@ serve(async (req) => {
 
     console.log('Comparing images for user:', userId);
 
+    // Fetch both images and convert to base64
+    const [profileImageResponse, selfieImageResponse] = await Promise.all([
+      fetch(profile.profile_photo_url),
+      fetch(profile.verification_selfie_url)
+    ]);
+
+    if (!profileImageResponse.ok || !selfieImageResponse.ok) {
+      throw new Error('Failed to fetch images for comparison');
+    }
+
+    const profileImageBuffer = await profileImageResponse.arrayBuffer();
+    const selfieImageBuffer = await selfieImageResponse.arrayBuffer();
+
+    const profileImageBase64 = btoa(String.fromCharCode(...new Uint8Array(profileImageBuffer)));
+    const selfieImageBase64 = btoa(String.fromCharCode(...new Uint8Array(selfieImageBuffer)));
+
+    // Get content types
+    const profileContentType = profileImageResponse.headers.get('content-type') || 'image/jpeg';
+    const selfieContentType = selfieImageResponse.headers.get('content-type') || 'image/jpeg';
+
     // Use OpenAI's vision model to compare the two images
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -85,11 +105,15 @@ serve(async (req) => {
               },
               {
                 type: 'image_url',
-                image_url: { url: profile.profile_photo_url }
+                image_url: { 
+                  url: `data:${profileContentType};base64,${profileImageBase64}`
+                }
               },
               {
                 type: 'image_url',
-                image_url: { url: profile.verification_selfie_url }
+                image_url: { 
+                  url: `data:${selfieContentType};base64,${selfieImageBase64}`
+                }
               }
             ]
           }
@@ -100,7 +124,9 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('OpenAI API error details:', errorText);
+      throw new Error(`OpenAI API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();
