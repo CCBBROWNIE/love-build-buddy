@@ -274,7 +274,7 @@ const AIAssistant = ({ onNavigateToMemories }: AIAssistantProps) => {
   };
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="h-full flex flex-col">
       {/* AI Messages - Scrollable */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {messages.map((message, index) => (
