@@ -27,7 +27,7 @@ const Chat = () => {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-background via-primary/5 to-background flex flex-col pb-20">
+    <div className="h-screen bg-gradient-to-br from-background via-primary/5 to-background flex flex-col pb-32">
       {/* Header */}
       <div className="bg-background/95 border-b border-border/50 backdrop-blur-lg p-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
